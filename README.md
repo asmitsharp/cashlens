@@ -36,13 +36,14 @@ cashlens/
 ## Tech Stack
 
 **Backend:**
-- Go 1.21+ with Fiber v3
+- Go 1.25 with Fiber v3
 - PostgreSQL 16
 - Redis (caching)
-- AWS S3 (file storage)
+- LocalStack S3 (local dev) / AWS S3 (production)
 
 **Frontend:**
-- Next.js 15 (App Router)
+- Next.js 15.2.3 (App Router)
+- React 18.3.1
 - TypeScript
 - Tailwind CSS + shadcn/ui
 - Clerk (authentication)
@@ -51,18 +52,24 @@ cashlens/
 
 ### Prerequisites
 
-- Go 1.21+
-- Node.js 20+
+- Go 1.25+ (or 1.23+)
+- Node.js 20+ (recommended: v20.19.5)
 - Docker & Docker Compose
+- nvm (Node Version Manager) - optional but recommended
 
 ### 1. Start Infrastructure
 
 ```bash
 # Start PostgreSQL, Redis, and LocalStack
-docker-compose up -d
+docker compose up -d
 
-# Verify services are running
-docker-compose ps
+# Verify services are running (all should show 'healthy')
+docker compose ps
+
+# Expected output:
+# - PostgreSQL on port 5432 (healthy)
+# - Redis on port 6379 (healthy)
+# - LocalStack S3 on port 4566 (healthy)
 ```
 
 ### 2. Backend Setup
@@ -70,14 +77,12 @@ docker-compose ps
 ```bash
 cd cashlens-api
 
-# Copy environment file
-cp .env.example .env
+# Environment file already configured
+# If needed: cp ../.env.example .env
 
 # Install dependencies
 go mod download
-
-# Run migrations (coming soon)
-# make migrate-up
+go mod tidy
 
 # Start development server
 go run cmd/api/main.go
@@ -85,24 +90,37 @@ go run cmd/api/main.go
 
 Backend should be running at: http://localhost:8080
 
-Test with: `curl http://localhost:8080/health`
+Test with:
+```bash
+curl http://localhost:8080/health
+# Response: {"status":"ok","service":"cashlens-api"}
+
+curl http://localhost:8080/v1/ping
+# Response: {"message":"pong"}
+```
 
 ### 3. Frontend Setup
 
 ```bash
+# Ensure Node 20+ is active
+node --version  # Should show v20.x.x
+# If not, install Node 20: nvm install 20 && nvm use 20
+
 cd cashlens-web
 
 # Install dependencies
-npm install
+npm install --legacy-peer-deps
 
-# Copy environment file
-cp .env.example .env.local
+# Environment file already configured
+# Check .env.local exists
 
 # Start development server
 npm run dev
 ```
 
 Frontend should be running at: http://localhost:3000
+
+Open in browser: http://localhost:3000
 
 ## Development Workflow
 
@@ -132,16 +150,29 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 0 - Project Setup ✅
+### Current Phase: Day 0 - Project Setup ✅ COMPLETE
 
 - [x] Backend project structure
 - [x] Frontend project structure
-- [x] Docker Compose configuration
+- [x] Docker Compose configuration (PostgreSQL, Redis, LocalStack)
 - [x] Environment configuration
+- [x] Go dependencies installed (Fiber, pgx, AWS SDK)
+- [x] Node dependencies installed (Next.js, React, Tailwind)
+- [x] Backend server running on port 8080
+- [x] Frontend server running on port 3000
+- [x] All infrastructure services healthy
+- [x] LocalStack S3 configured and working
 
 ### Next Steps: Day 1 - Authentication
 
 Follow `CLAUDE.md` instructions to implement Clerk authentication.
+
+**Start here:**
+1. Sign up for Clerk account at https://dashboard.clerk.com
+2. Get API keys (CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY)
+3. Update .env files with Clerk credentials
+4. Implement Clerk middleware in backend
+5. Add authentication pages in frontend
 
 ## Key Features (MVP)
 
