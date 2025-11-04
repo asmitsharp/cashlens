@@ -439,3 +439,46 @@ cashlens-web/
 4. **Ship MVP 3 days faster** 🚀
 
 **Questions?** This is the battle-tested path for indie founders. You can always migrate later when it makes financial sense.
+
+---
+
+## Specialized Development Agents for Technical Implementation
+
+### Agent Usage for Key Technical Components
+
+**Authentication (Clerk Integration):**
+- Use `senior-engineer` to validate Clerk vs custom auth decision
+- Use `code-reviewer` to audit JWT validation middleware
+- Use `golang-pro` for idiomatic Clerk SDK integration in Go
+
+**Database Schema Design:**
+- Use `database-architect` for schema design and indexing strategy
+- Example: "Design optimal schema for transactions table supporting 1M+ records with efficient filtering by user_id, category, date range, and is_reviewed status"
+- Use for migration planning and performance optimization
+
+**Backend API Development:**
+- Use `backend-development:backend-architect` for API endpoint design
+- Use `backend-development:tdd-orchestrator` for test-first implementation
+- Use `golang-pro` for Go-specific optimizations and best practices
+- Use `code-reviewer` for security and performance validation
+
+**Frontend Development:**
+- Use `frontend-developer` for all React/Next.js components
+- Example: "Build responsive dashboard with KPI cards and charts using shadcn/ui"
+- Use for accessibility, performance, and responsive design
+
+**Future: Payment Integration:**
+- Use `payment-processing:payment-integration` when implementing subscription billing
+- Example: "Implement Stripe subscription with webhook handling for premium tier"
+
+### Recommended Agent Workflow
+
+For any new feature implementation:
+
+1. **Design Phase**: Use `backend-architect` or `senior-engineer` for architecture
+2. **Schema Phase**: Use `database-architect` for database changes
+3. **Implementation Phase**: Use `tdd-orchestrator` + `golang-pro` or `frontend-developer`
+4. **Review Phase**: Use `code-reviewer` for security, performance, and quality
+5. **Documentation Phase**: Use `docs-architect` or `tutorial-engineer`
+
+This ensures consistent quality and adherence to best practices throughout development.

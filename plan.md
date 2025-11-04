@@ -1255,6 +1255,66 @@ Create 3-minute demo video showing:
 
 ---
 
+## Specialized Development Agents
+
+The project has access to specialized AI agents that should be used throughout the development process:
+
+### When to Use Agents in Daily Workflow
+
+**Day 1 (Authentication):**
+- Use `senior-engineer` to review Clerk integration architecture
+- Use `code-reviewer` after implementing Clerk middleware
+
+**Day 2 (CSV Parser):**
+- Use `backend-development:tdd-orchestrator` to implement parser with tests first
+- Use `golang-pro` to ensure idiomatic Go code with proper error handling
+- Use `code-reviewer` before committing parser implementation
+
+**Day 3 (File Upload):**
+- Use `backend-architect` to design S3 presigned URL flow
+- Use `golang-pro` for S3 client implementation
+- Use `code-reviewer` to check for security vulnerabilities in upload handler
+
+**Day 4 (Categorization Engine):**
+- Use `database-architect` to optimize rules table schema
+- Use `backend-development:tdd-orchestrator` for categorizer tests
+- Use `golang-pro` to optimize rule matching algorithm
+- Use `code-reviewer` for accuracy validation
+
+**Day 5 (Review Inbox):**
+- Use `backend-architect` to design filtered transactions API
+- Use `frontend-developer` for review UI components
+- Use `code-reviewer` for security check on update endpoints
+
+**Day 6-7 (Dashboard):**
+- Use `database-architect` to optimize aggregation queries
+- Use `frontend-developer` for chart components and responsive design
+- Use `code-reviewer` for performance validation
+
+**Day 8 (Security):**
+- Use `code-reviewer` proactively for security audit
+- Use `senior-engineer` to review overall security architecture
+- Use `golang-pro` to ensure proper error handling and input validation
+
+**Day 9 (Performance Testing):**
+- Use `database-architect` for index optimization
+- Use `golang-pro` for concurrency optimization
+- Use `senior-engineer` for architecture review
+
+**Day 10 (Documentation):**
+- Use `code-documentation:docs-architect` for API documentation
+- Use `code-documentation:tutorial-engineer` for user onboarding guides
+- Use `senior-engineer` for final architecture review
+
+### Agent Best Practices
+
+1. **Always use TDD orchestrator** for new features to ensure tests are written first
+2. **Use code-reviewer proactively** after completing any significant code (don't wait to be asked)
+3. **Use database-architect** before creating migrations to ensure optimal schema design
+4. **Use golang-pro** for any Go code to ensure idiomatic patterns
+5. **Use frontend-developer** for all React/Next.js components
+6. **Use senior-engineer** for major architectural decisions
+
 ## Risk Mitigation Strategies
 
 ### R1: CSV Format Variance (Probability: HIGH, Impact: HIGH)
@@ -1262,7 +1322,9 @@ Create 3-minute demo video showing:
 **Mitigation:**
 
 - Build normalization matrix on Day 2
+- Use `backend-development:tdd-orchestrator` to ensure comprehensive test coverage
 - Test with real CSVs early
+- Use `golang-pro` to optimize parser performance
 - Fallback: Manual column mapping UI (not implemented in MVP, but schema-ready)
 
 ### R2: Rule Engine Performance (Probability: MEDIUM, Impact: MEDIUM)
