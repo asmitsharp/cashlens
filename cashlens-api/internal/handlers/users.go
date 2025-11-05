@@ -60,12 +60,12 @@ func (h *UsersHandler) CreateUser(c fiber.Ctx) error {
 
 	now := time.Now()
 	var user struct {
-		ID           uuid.UUID `json:"id"`
-		ClerkUserID  string    `json:"clerk_user_id"`
-		Email        string    `json:"email"`
-		FullName     *string   `json:"full_name"`
-		CreatedAt    time.Time `json:"created_at"`
-		UpdatedAt    time.Time `json:"updated_at"`
+		ID          uuid.UUID `json:"id"`
+		ClerkUserID string    `json:"clerk_user_id"`
+		Email       string    `json:"email"`
+		FullName    *string   `json:"full_name"`
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 
 	err := h.db.QueryRow(
@@ -88,7 +88,7 @@ func (h *UsersHandler) CreateUser(c fiber.Ctx) error {
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to create user",
+			"error":   "Failed to create user",
 			"details": err.Error(),
 		})
 	}
@@ -122,12 +122,12 @@ func (h *UsersHandler) UpdateUser(c fiber.Ctx) error {
 	`
 
 	var user struct {
-		ID           uuid.UUID `json:"id"`
-		ClerkUserID  string    `json:"clerk_user_id"`
-		Email        string    `json:"email"`
-		FullName     *string   `json:"full_name"`
-		CreatedAt    time.Time `json:"created_at"`
-		UpdatedAt    time.Time `json:"updated_at"`
+		ID          uuid.UUID `json:"id"`
+		ClerkUserID string    `json:"clerk_user_id"`
+		Email       string    `json:"email"`
+		FullName    *string   `json:"full_name"`
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 
 	err := h.db.QueryRow(
@@ -148,7 +148,7 @@ func (h *UsersHandler) UpdateUser(c fiber.Ctx) error {
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to update user",
+			"error":   "Failed to update user",
 			"details": err.Error(),
 		})
 	}
@@ -167,12 +167,12 @@ func (h *UsersHandler) GetUser(c fiber.Ctx) error {
 	`
 
 	var user struct {
-		ID           uuid.UUID `json:"id"`
-		ClerkUserID  string    `json:"clerk_user_id"`
-		Email        string    `json:"email"`
-		FullName     *string   `json:"full_name"`
-		CreatedAt    time.Time `json:"created_at"`
-		UpdatedAt    time.Time `json:"updated_at"`
+		ID          uuid.UUID `json:"id"`
+		ClerkUserID string    `json:"clerk_user_id"`
+		Email       string    `json:"email"`
+		FullName    *string   `json:"full_name"`
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 
 	err := h.db.QueryRow(context.Background(), query, clerkUserID).Scan(
