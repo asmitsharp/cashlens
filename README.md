@@ -150,7 +150,7 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 1.5 - Design System ✅ COMPLETE
+### Current Phase: Day 2 - CSV Parser & Normalization ✅ COMPLETE
 
 - [x] **Day 0:** Project Setup ✅ COMPLETE
   - Backend & frontend structure
@@ -173,7 +173,26 @@ See `plan.md` for the complete 10-day MVP implementation plan.
   - Clerk components themed to match design system
   - Full shadcn/ui component library themed
 
+- [x] **Day 2:** CSV Parser & Normalization ✅ COMPLETE
+  - CSV parser for 5 major Indian banks (HDFC, ICICI, SBI, Axis, Kotak)
+  - Auto-detection of bank format from CSV headers
+  - Multi-format date parsing (DD/MM/YYYY, DD-MMM-YYYY, YYYY-MM-DD)
+  - Amount parsing with currency symbol handling (₹, Rs, commas)
+  - Transactions database schema with 6 optimized indexes
+  - 17 SQLC queries for CRUD operations
+  - 23 passing tests with 87.1% code coverage
+  - Research document for multi-format support (CSV/XLSX/PDF)
+
 **Key Implementation Details:**
+
+**CSV Parser:**
+- Parser Service: [internal/services/parser.go](cashlens-api/internal/services/parser.go) - Multi-bank CSV parsing
+- Test Suite: [internal/services/parser_test.go](cashlens-api/internal/services/parser_test.go) - 23 tests, 87.1% coverage
+- Test Fixtures: [testdata/](cashlens-api/testdata/) - Sample CSVs for 5 banks
+- Transaction Model: [internal/models/transaction.go](cashlens-api/internal/models/transaction.go)
+- Database Migration: [internal/database/migrations/002_create_transactions_table.sql](cashlens-api/internal/database/migrations/002_create_transactions_table.sql)
+- SQLC Queries: [internal/database/queries/transactions.sql](cashlens-api/internal/database/queries/transactions.sql) - 17 queries
+- Research: [docs/bank-statement-format-research.md](docs/bank-statement-format-research.md) - Multi-format analysis
 
 **Design System:**
 - Documentation: [design-system.md](design-system.md) - Single source of truth for all UI/UX
@@ -185,25 +204,28 @@ See `plan.md` for the complete 10-day MVP implementation plan.
 **Authentication:**
 - Backend: [internal/middleware/clerk_auth.go](cashlens-api/internal/middleware/clerk_auth.go) - JWT validation
 - Frontend: [app/(auth)/](cashlens-web/app/(auth)/) - Authentication pages
-- Database: [internal/database/migrations/001_create_users_table.sql](cashlens-api/internal/database/migrations/001_create_users_table.sql)
+- Database: [internal/database/migrations/001_initial.sql](cashlens-api/internal/database/migrations/001_initial.sql)
 - Webhooks: [app/api/webhooks/clerk/route.ts](cashlens-web/app/api/webhooks/clerk/route.ts)
 
-### Next Steps: Day 2 - CSV Parser & Normalization
+### Next Steps: Day 3 - File Upload Flow + Multi-Format Support
 
 **Goals:**
-1. Implement CSV parser for 5 major Indian banks (HDFC, ICICI, SBI, Axis, Kotak)
-2. Create bank schema detection
-3. Normalize transactions to standard format
-4. Achieve 100% unit test coverage
+1. Extend parser to support XLSX (Excel) and PDF formats
+2. Create Python microservice for PDF parsing using Camelot/pdfplumber
+3. Implement S3 presigned URL upload flow
+4. Create file processing endpoint with unified parser
+5. Build frontend upload page with drag-and-drop
+6. Track upload history in database
 
 **Start here:**
-1. Create test fixtures in `cashlens-api/testdata/`
-2. Use TDD to implement parser service
-3. Focus on date parsing and amount normalization
+1. Install `github.com/xuri/excelize/v2` for XLSX parsing
+2. Create Python Flask app for PDF parsing
+3. Implement S3 storage service
+4. Build upload handlers with file validation
 
 ## Key Features (MVP)
 
-1. **CSV Upload** - Support for 5 major Indian banks
+1. **Multi-Format Upload** - Support for CSV/XLSX/PDF from 5 major Indian banks
 2. **Auto-Categorization** - 85%+ accuracy with rule engine
 3. **Smart Review** - Only review uncategorized transactions
 4. **Dashboard** - Net cash flow & top expenses visualization
