@@ -1,117 +1,282 @@
-# cashlens Design System (Pareto Theme)
+# CashLens Design System (Pareto Theme)
 
-**Status:** Adopted
+**Status:** Active - Single Source of Truth
 **Version:** 1.0
+**Last Updated:** 2025-11-05
 
 ## 1. Philosophy
 
-This document defines the visual identity for the "cashlens" application. The design is a direct implementation of the "Pareto" UI theme.
+This document is the **single source of truth** for all UI/UX in CashLens. Every frontend component, page, and style must strictly adhere to this specification.
 
-- **Minimal & Aesthetic:** The UI is clean, spacious, and relies on a limited color palette.
-- **Typography-First:** A sophisticated mix of serif and sans-serif fonts differentiates marketing/display text from UI/data text.
-- **Professional & Calm:** The color palette is desaturated and calm (greens, grays, blues), building trust and focus.
-- **Component-Based:** All UI will be constructed using `shadcn/ui` components, styled to match this specification.
+**Design Principles:**
+- **Simple:** No unnecessary complexity or decoration
+- **Minimal:** Generous whitespace, clean layouts, focused content
+- **Spacious:** Comfortable padding and margins throughout
+- **Professional:** Enterprise-ready aesthetics for SMB founders
+- **Accessible:** WCAG 2.1 AA compliant (4.5:1 contrast minimum)
+
+**Tech Stack:**
+- Component Library: `shadcn/ui`
+- Styling: Tailwind CSS with CSS variables
+- Fonts: Inter (UI), Lora (landing page headlines only)
+- Icons: Lucide React
 
 ---
 
 ## 2. Color Palette
 
-All colors are defined as CSS variables in `app/globals.css` to be used by Tailwind and `shadcn/ui`.
+All colors are defined as CSS variables in `cashlens-web/app/globals.css`. This enables consistent theming across all `shadcn/ui` components.
 
-| Role                 | CSS Variable             | HSL Value (Light Theme) | Hex (Approx.) | Description                             |
-| :------------------- | :----------------------- | :---------------------- | :------------ | :-------------------------------------- |
-| **Background**       | `--background`           | `160 20% 97%`           | `#f7fbfb`     | Main page background (light green-gray) |
-| **Foreground**       | `--foreground`           | `160 25% 25%`           | `#2a4a4a`     | Primary text (dark green-teal)          |
-| **Card**             | `--card`                 | `160 20% 100%`          | `#ffffff`     | Default card background (white)         |
-| **Card (Muted)**     | `--card-secondary`       | `160 30% 94%`           | `#eaf1f1`     | Muted card bg (e.g., active accordion)  |
-| **Card (Info)**      | `--card-tertiary`        | `200 25% 95%`           | `#edf4f7`     | Info boxes (e.g., TVL, Price)           |
-| **Primary (Accent)** | `--primary`              | `165 77% 64%`           | `#79fced`     | Main CTA, active tabs (bright mint)     |
-| **Primary Text**     | `--primary-foreground`   | `160 25% 20%`           | `#223d3d`     | Text on top of the primary accent       |
-| **Secondary**        | `--secondary`            | `160 30% 94%`           | `#eaf1f1`     | Muted components, inactive tabs         |
-| **Secondary Text**   | `--secondary-foreground` | `160 25% 30%`           | `#325555`     | Text on secondary components            |
-| **Muted**            | `--muted`                | `160 20% 90%`           | `#e0e8e8`     | Subtle text, dividers                   |
-| **Muted Text**       | `--muted-foreground`     | `160 20% 45%`           | `#617d7d`     | Muted placeholder/info text             |
-| **Border**           | `--border`               | `160 20% 88%`           | `#dce5e5`     | Component borders                       |
-| **Ring (Focus)**     | `--ring`                 | `160 25% 45%`           | `#587474`     | Focus rings for accessibility           |
+### Core Colors
+
+| Role                 | CSS Variable             | HSL Value           | Usage                                  |
+| :------------------- | :----------------------- | :------------------ | :------------------------------------- |
+| **Background**       | `--background`           | `0 0% 100%`         | Pure white - page background           |
+| **Foreground**       | `--foreground`           | `240 10% 3.9%`      | Near black - primary text              |
+| **Card**             | `--card`                 | `0 0% 100%`         | White - card backgrounds               |
+| **Card Foreground**  | `--card-foreground`      | `240 10% 3.9%`      | Near black - card text                 |
+| **Popover**          | `--popover`              | `0 0% 100%`         | White - dropdown backgrounds           |
+| **Popover Foreground** | `--popover-foreground` | `240 10% 3.9%`      | Near black - dropdown text             |
+| **Primary**          | `--primary`              | `240 5.9% 10%`      | Near black - primary actions, buttons  |
+| **Primary Foreground** | `--primary-foreground` | `0 0% 98%`          | White text on primary buttons          |
+| **Secondary**        | `--secondary`            | `240 4.8% 95.9%`    | Light gray - secondary buttons         |
+| **Secondary Foreground** | `--secondary-foreground` | `240 5.9% 10%` | Dark text on secondary buttons         |
+| **Muted**            | `--muted`                | `240 4.8% 95.9%`    | Light gray - disabled states           |
+| **Muted Foreground** | `--muted-foreground`     | `240 3.8% 46.1%`    | Medium gray - secondary text           |
+| **Accent**           | `--accent`               | `240 4.8% 95.9%`    | Light gray - hover states              |
+| **Accent Foreground** | `--accent-foreground`   | `240 5.9% 10%`      | Dark text on accents                   |
+| **Destructive**      | `--destructive`          | `0 84.2% 60.2%`     | Red - errors, delete actions           |
+| **Destructive Foreground** | `--destructive-foreground` | `0 0% 98%` | White text on red                      |
+| **Border**           | `--border`               | `240 5.9% 90%`      | Light gray - component borders         |
+| **Input**            | `--input`                | `240 5.9% 90%`      | Light gray - input borders             |
+| **Ring**             | `--ring`                 | `240 5.9% 10%`      | Near black - focus rings               |
+
+### Custom Semantic Colors
+
+| Role             | CSS Variable      | HSL Value         | Usage                          |
+| :--------------- | :---------------- | :---------------- | :----------------------------- |
+| **Success**      | `--success`       | `142 76% 36%`     | Green - positive cash flow     |
+| **Success FG**   | `--success-foreground` | `0 0% 98%` | White text on green            |
+| **Warning**      | `--warning`       | `38 92% 50%`      | Amber - warnings, pending      |
+| **Warning FG**   | `--warning-foreground` | `0 0% 98%`  | White text on amber            |
+| **Chart Green**  | `--chart-green`   | `142 76% 36%`     | Positive values in charts      |
+| **Chart Red**    | `--chart-red`     | `0 84.2% 60.2%`   | Negative values in charts      |
+| **Chart Blue**   | `--chart-blue`    | `221 83% 53%`     | Neutral data in charts         |
+| **Chart Amber**  | `--chart-amber`   | `38 92% 50%`      | Highlights in charts           |
+| **Chart Purple** | `--chart-purple`  | `262 83% 58%`     | Secondary data in charts       |
 
 ---
 
 ## 3. Typography
 
-We will use two Google Fonts: **`Inter`** (Sans-Serif) and **`Lora`** (Serif).
+### Font Families
 
-| Font           | Variable            | Weight        | Usage                                                                                               |
-| :------------- | :------------------ | :------------ | :-------------------------------------------------------------------------------------------------- |
-| **Sans-Serif** | `var(--font-sans)`  | 400, 500, 700 | **Default.** All UI text, body copy, sub-headings, nav links, buttons.                              |
-| **Serif**      | `var(--font-serif)` | 400, 500      | **Display only.** Main marketing headlines on the landing page (e.g., "Radically transforming..."). |
+**Inter (Sans-Serif)** - Primary UI font
+- Usage: All dashboard UI, buttons, labels, body text, navigation, data tables
+- Weights: 400 (Regular), 500 (Medium), 600 (Semi-bold), 700 (Bold)
+- Variable: `var(--font-sans)` or `font-sans` Tailwind class
 
-- **`app/layout.tsx`** must be configured to load these fonts.
-- **`tailwind.config.js`** must be updated to include `fontFamily: { sans: ["var(--font-sans)", ...], serif: ["var(--font-serif)", ...] }`.
+**Lora (Serif)** - Display font
+- Usage: **Landing page headlines ONLY** (not in dashboard)
+- Weights: 600 (Semi-bold), 700 (Bold)
+- Variable: `var(--font-serif)` or `font-serif` Tailwind class
+
+### Font Scale (Tailwind Classes)
+
+```css
+text-xs:    0.75rem  (12px)  /* Small labels, captions */
+text-sm:    0.875rem (14px)  /* Secondary text, table cells */
+text-base:  1rem     (16px)  /* Body text, default */
+text-lg:    1.125rem (18px)  /* Large body text */
+text-xl:    1.25rem  (20px)  /* Section subheadings */
+text-2xl:   1.5rem   (24px)  /* Card titles */
+text-3xl:   1.875rem (30px)  /* Page titles */
+text-4xl:   2.25rem  (36px)  /* Dashboard headlines */
+```
+
+### Line Heights
+
+```css
+leading-tight:   1.25   /* Headlines */
+leading-snug:    1.375  /* Subheadings */
+leading-normal:  1.5    /* Body text */
+leading-relaxed: 1.625  /* Long-form content */
+```
+
+### Font Weights
+
+```css
+font-normal:    400  /* Body text */
+font-medium:    500  /* Labels, emphasized text */
+font-semibold:  600  /* Button text, card titles */
+font-bold:      700  /* Page headings */
+```
 
 ---
 
-## 4. Border Radius
+## 4. Spacing Scale
 
-The theme uses significantly rounded corners.
+Use Tailwind's default spacing (1 unit = 0.25rem = 4px):
 
-- **`--radius` (in `globals.css`):** `1.0rem`
-- **Tailwind:** `rounded-2xl` and `rounded-3xl` will be used frequently for large cards. Buttons will use `rounded-full` or `rounded-lg`.
+```css
+p-2:  0.5rem   (8px)   /* Tight spacing */
+p-4:  1rem     (16px)  /* Standard padding */
+p-6:  1.5rem   (24px)  /* Card padding */
+p-8:  2rem     (32px)  /* Page padding */
+p-12: 3rem     (48px)  /* Section padding */
+
+gap-2:  0.5rem   /* Tight gaps */
+gap-4:  1rem     /* Standard gaps */
+gap-6:  1.5rem   /* Card gaps */
+gap-8:  2rem     /* Section gaps */
+```
+
+**Layout Guidelines:**
+- Page margins: `mx-auto max-w-7xl px-4 sm:px-6 lg:px-8`
+- Card padding: `p-6` (24px)
+- Section spacing: `space-y-8` (32px vertical)
+- Form spacing: `space-y-4` (16px between fields)
+- Button padding: `px-4 py-2` (16px h, 8px v)
 
 ---
 
-## 5. Iconography
+## 5. Border Radius
 
-- **Library:** `lucide-react` (default for `shadcn/ui`).
-- **Style:** All icons must be thin, line-art style to match the custom icons in the Pareto screenshots.
-- **Custom Icons:** For diagrams (like the "How it Works" flow), custom SVG icons matching the line-art style are required.
+**Base radius:** `--radius: 1.0rem` (16px) in `globals.css`
+
+```css
+rounded-lg:    0.5rem   (8px)   /* Buttons, inputs */
+rounded-xl:    0.75rem  (12px)  /* Medium elements */
+rounded-2xl:   1rem     (16px)  /* Cards, modals - DEFAULT */
+rounded-3xl:   1.5rem   (24px)  /* Hero sections */
+rounded-full:  9999px           /* Circular (avatars, pills) */
+```
+
+**Usage:**
+- Cards: `rounded-2xl` (16px)
+- Buttons: `rounded-lg` (8px)
+- Inputs: `rounded-lg` (8px)
+- Modals: `rounded-2xl` (16px)
+- Badges: `rounded-md` (6px)
 
 ---
 
-## 6. Core Component Specifications
+## 6. Shadows
 
-### Landing Page (`app/page.tsx`)
+```css
+shadow-sm:   Subtle, minimal elevation
+shadow:      Default cards
+shadow-md:   Elevated cards
+shadow-lg:   Modals, dialogs
+shadow-xl:   Popovers, dropdowns
+shadow-2xl:  Hero elements
+```
 
-- **Navbar:** Minimal. Logo left. "Product", "Features" links (sans-serif, uppercase). "Enter App" button (Primary Accent color).
-- **Hero:** Center-aligned. `font-serif` for main headline, `font-sans` for sub-headline.
-- **Feature Cards:** Use `shadcn/ui` Card, styled with `rounded-2xl` or `rounded-3xl` and soft shadows.
-- **Info Boxes:** Use the `--card-tertiary` (light blue) background.
-- **Pill Tabs:** Use `shadcn/ui` Toggle Group, styled to match (active state is `--primary`).
-- **Buttons:**
-  - **Primary:** Mint accent (`--primary`).
-  - **Secondary:** Outlined, dark text, dark border (`--border` or `--foreground`).
+**Usage:**
+- Cards: `shadow` or `shadow-md`
+- Hover: Increase shadow (`hover:shadow-lg`)
+- Modals: `shadow-2xl`
 
-### Authentication (`app/(auth)/...`)
+---
 
-- **Provider:** Clerk (as planned).
-- **UI:** Use Clerk's pre-built components (`<SignIn />`, `<SignUp />`).
-- **Styling:** The components must be styled using Clerk's `appearance` prop to match this design system:
-  - `rootBox`: Center on the page.
-  - `card`: Set background to `--card` (`#ffffff`), `borderRadius` to `1.0rem`, and add a soft shadow.
-  - `formButtonPrimary`: Set background to `--primary` (mint), text to `--primary-foreground`.
-  - `formFieldInput`: Set border to `--border`.
+## 7. Iconography
 
-### Dashboard Layout (`app/(dashboard)/layout.tsx`)
+- **Library:** `lucide-react` (default for shadcn/ui)
+- **Style:** Line-art, minimal, consistent stroke width
 
-- **Navbar:** A simple, thin top-bar is preferred over a sidebar to maintain the minimal aesthetic.
-  - Logo, "Dashboard", "Review", "Upload".
-  - User profile button (Clerk's `<UserButton />`) on the far right.
-- **Content:** Main content area will have a `bg-background` (`#f7fbfb`) color.
+**Icon Sizes:**
+```tsx
+w-4 h-4   /* 16px - Inline text */
+w-5 h-5   /* 20px - Buttons (default) */
+w-6 h-6   /* 24px - Headers */
+w-8 h-8   /* 32px - Hero */
+```
 
-### Dashboard Page (`app/(dashboard)/page.tsx`)
+---
 
-- **KPI Cards:** Use `shadcn/ui` Card. `rounded-2xl`. White background (`--card`).
-- **Charts (Recharts):**
-  - **Bar/Line Colors:** Use `--foreground` (`#2a4a4a`) or `--foreground-secondary` (`#587474`).
-  * **Positive (Inflow):** Use a clear, positive green (can be a new color, e.g., `hsl(140, 50%, 50%)`).
-  * **Negative (Outflow):** Use a clear, negative red/orange (e.g., `hsl(0, 70%, 60%)`).
-- **Data Tables:** Use `shadcn/ui` Table. Minimalist, no strong borders.
+## 8. Component Specifications
 
-### Smart Review (`/review`)
+### Buttons
 
-- **UI:** A full-page `shadcn/ui` Data Table.
-- **Interactive Component:** The "Category" column will use a `shadcn/ui` **Combobox** (autocomplete dropdown) styled to match the theme.
+**Primary Button:**
+```tsx
+<Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg">
+  Upload CSV
+</Button>
+```
 
-### Profile (`/profile`)
+**Secondary Button:**
+```tsx
+<Button variant="secondary" className="rounded-lg">
+  Cancel
+</Button>
+```
 
-- **UI:** Use Clerk's `<UserProfile />` component.
-- **Styling:** Apply the same `appearance` prop as the Sign-In page to make it match the theme (rounded cards, correct button colors).
+**Sizes:** Small: `px-3 py-1.5 text-sm`, Default: `px-4 py-2`, Large: `px-6 py-3 text-lg`
+
+### Cards
+
+```tsx
+<Card className="rounded-2xl p-6 shadow">
+  <CardHeader>
+    <CardTitle className="text-2xl font-semibold">Title</CardTitle>
+  </CardHeader>
+  <CardContent>{/* Content */}</CardContent>
+</Card>
+```
+
+### Inputs
+
+```tsx
+<Input
+  type="text"
+  placeholder="Enter email"
+  className="rounded-lg border-input"
+/>
+```
+
+---
+
+## 9. Clerk Authentication Theming
+
+**Appearance configuration for sign-in/sign-up pages:**
+
+```tsx
+const clerkAppearance = {
+  elements: {
+    formButtonPrimary:
+      'bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-semibold',
+    card: 'rounded-2xl shadow-md',
+    headerTitle: 'text-2xl font-bold text-foreground',
+    headerSubtitle: 'text-muted-foreground',
+    formFieldLabel: 'text-sm font-medium text-foreground',
+    formFieldInput: 'rounded-lg border-input focus:ring-2 focus:ring-ring',
+    footerActionLink: 'text-primary hover:text-primary/90',
+  },
+  variables: {
+    colorPrimary: 'hsl(240, 5.9%, 10%)',
+    colorBackground: 'hsl(0, 0%, 100%)',
+    borderRadius: '0.5rem',
+  },
+}
+```
+
+---
+
+## 10. Implementation Checklist
+
+When creating UI components, ensure:
+
+- [ ] Uses Inter font (`font-sans`)
+- [ ] Colors use CSS variables (not hardcoded)
+- [ ] Cards use `rounded-2xl`, buttons use `rounded-lg`
+- [ ] Proper spacing (p-6 for cards, p-4 for standard)
+- [ ] Hover states with transitions
+- [ ] Focus rings for accessibility
+- [ ] WCAG 2.1 AA contrast compliance
+- [ ] Keyboard accessible
+- [ ] Mobile responsive
+
+---
+
+**This is the single source of truth for all CashLens UI. All components must follow these specifications.**

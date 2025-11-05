@@ -17,6 +17,7 @@
     "react-hook-form": "^7.50.0",
     "recharts": "^2.10.0",
     "svix": "^1.81.0",
+    "tailwindcss-animate": "^1.0.7",
     "zustand": "^4.5.0"
   },
   "devDependencies": {

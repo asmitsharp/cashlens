@@ -1,3 +1,92 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Neutral Scale */
+    --background: 0 0% 100%;          /* Pure white - page background */
+    --foreground: 240 10% 3.9%;       /* Near black - primary text */
+    --muted: 240 4.8% 95.9%;          /* Light gray - disabled states */
+    --muted-foreground: 240 3.8% 46.1%; /* Medium gray - secondary text */
+
+    /* Card System */
+    --card: 0 0% 100%;                /* White - card background */
+    --card-foreground: 240 10% 3.9%;  /* Near black - card text */
+
+    /* Popover/Dropdown */
+    --popover: 0 0% 100%;             /* White */
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Border & Input */
+    --border: 240 5.9% 90%;           /* Light gray borders */
+    --input: 240 5.9% 90%;            /* Input borders */
+
+    /* Primary (Brand) */
+    --primary: 240 5.9% 10%;          /* Near black - primary actions */
+    --primary-foreground: 0 0% 98%;   /* White text on primary */
+
+    /* Secondary */
+    --secondary: 240 4.8% 95.9%;      /* Light gray - secondary buttons */
+    --secondary-foreground: 240 5.9% 10%; /* Dark text on secondary */
+
+    /* Accent */
+    --accent: 240 4.8% 95.9%;         /* Light gray hover states */
+    --accent-foreground: 240 5.9% 10%;
+
+    /* Destructive (Errors) */
+    --destructive: 0 84.2% 60.2%;     /* Red - errors, delete actions */
+    --destructive-foreground: 0 0% 98%;
+
+    /* Success (Custom) */
+    --success: 142 76% 36%;           /* Green - positive cash flow */
+    --success-foreground: 0 0% 98%;
+
+    /* Warning (Custom) */
+    --warning: 38 92% 50%;            /* Amber - warnings, pending */
+    --warning-foreground: 0 0% 98%;
+
+    /* Chart Colors (Custom) */
+    --chart-green: 142 76% 36%;       /* Positive values */
+    --chart-red: 0 84.2% 60.2%;       /* Negative values */
+    --chart-blue: 221 83% 53%;        /* Neutral data */
+    --chart-amber: 38 92% 50%;        /* Highlights */
+    --chart-purple: 262 83% 58%;      /* Secondary data */
+
+    /* Functional */
+    --ring: 240 5.9% 10%;             /* Focus rings */
+    --radius: 0.5rem;                 /* Base border radius (8px) */
+  }
+
+  .dark {
+    /* Dark mode support (future enhancement) */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
