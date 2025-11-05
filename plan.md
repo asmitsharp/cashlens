@@ -30,6 +30,7 @@ Before marking Day 10 as complete, ALL of these must be true:
 **Goal:** Runnable local dev environment for both frontend and backend
 
 **Status:** All tasks completed successfully
+
 - [x] Backend project structure created
 - [x] Frontend project structure created
 - [x] Docker Compose configuration (PostgreSQL, Redis, LocalStack)
@@ -185,6 +186,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 **Deliverable:** `main` branch with runnable backend + frontend + database ✅ COMPLETE
 
 **Actual Completion Notes:**
+
 - Go upgraded to 1.25.0 automatically
 - Node.js upgraded from 19.4.0 to 20.19.5 for compatibility
 - React downgraded from 19 to 18.3.1 for Next.js 15 compatibility
@@ -203,6 +205,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 **Status:** All tasks completed successfully - Implemented Clerk-based authentication
 
 **Actual Implementation:**
+
 - ✅ Used Clerk for production-ready authentication (faster than custom auth)
 - ✅ Complete JWT validation middleware in Go backend
 - ✅ User synchronization via webhooks
@@ -214,6 +217,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 #### Backend Tasks ✅ COMPLETE (4h)
 
 **Files Created:**
+
 - ✅ `internal/middleware/clerk_auth.go` - JWT validation with Clerk SDK
 - ✅ `internal/middleware/cors.go` - CORS configuration
 - ✅ `internal/handlers/users.go` - User CRUD for webhook sync
@@ -221,6 +225,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 - ✅ `internal/database/migrations/001_create_users_table.sql` - Users schema
 
 **Key Features:**
+
 - ✅ JWT token validation using Clerk SDK v2
 - ✅ User ID injection into request context
 - ✅ Protected routes with authentication middleware
@@ -230,6 +235,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 #### Frontend Tasks ✅ COMPLETE (3h)
 
 **Files Created:**
+
 - ✅ `app/layout.tsx` - ClerkProvider wrapper
 - ✅ `middleware.ts` - Route protection with Clerk middleware
 - ✅ `app/(auth)/sign-in/[[...sign-in]]/page.tsx` - Sign-in page
@@ -239,6 +245,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 - ✅ `app/api/webhooks/clerk/route.ts` - Webhook handler for user sync
 
 **Key Features:**
+
 - ✅ Pre-built Clerk UI components for sign-in/sign-up
 - ✅ Automatic JWT management
 - ✅ Protected dashboard routes
@@ -255,6 +262,7 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 - ✅ **Local webhook test:** ngrok setup documented for development
 
 **Issues Resolved:**
+
 - ✅ Fixed hydration mismatch by converting dashboard to client component
 - ✅ Fixed 404 errors by adding signInUrl/signUpUrl to middleware config
 - ✅ Fixed Clerk SDK compilation error (incorrect VerifyParams structure)
@@ -263,6 +271,23 @@ psql postgres://postgres:dev123@localhost:5432/cashlens < internal/database/migr
 **Deliverable:** ✅ Working authentication flow with Clerk integration, user database sync via webhooks, and comprehensive documentation ([docs/authentication.md](docs/authentication.md))
 
 ---
+
++### **Day 1.5: Design System Implementation** (NEW TASK)
+
+- +**Goal:** Implement the "Pareto" theme as the single source of truth for all UI.
+- +#### Frontend Tasks (3h)
+- +1. **Create `design-system.md`** file in the project root with the full specification.
+  +2. **Install Fonts:** Add `Inter` and `Lora` fonts to `app/layout.tsx`.
+  +3. **Configure `tailwind.config.js`:**
+- - Add the `fontFamily: { sans: ..., serif: ... }` extension.
+- - Update `theme.extend.colors` to use the CSS variables from `design-system.md`.
+- - Set the root `borderRadius` variable to `1.0rem`.
+    +4. **Configure `globals.css`:**
+- - Replace the entire `:root` block with the new color palette from `design-system.md`.
+    +5. **Theme Clerk Components:**
+- - Update `app/(auth)/...` pages to pass the `appearance` prop to `<SignIn />` and `<SignUp />` to match the new design system.
+- +**Deliverable:** A themed, runnable frontend app where all `shadcn/ui` components automatically use the new "Pareto" theme.
+- +---
 
 ### **Day 2: CSV Parser & Normalization** (Tuesday)
 
@@ -393,7 +418,10 @@ func (h *UploadHandler) GetPresignedURL(c fiber.Ctx) error {
 
 #### Frontend Tasks (3h)
 
-1. **Create upload page** (`app/(dashboard)/upload/page.tsx`):
++1. **Create upload page** (`app/(dashboard)/upload/page.tsx`) **following `design-system.md`**:
+
+- - Use `shadcn/ui` Card, styled with `rounded-2xl`.
+- - Style the `react-dropzone` component to be minimal and clean.
 
 ```tsx
 "use client"
@@ -614,7 +642,10 @@ func (h *TransactionHandler) GetTransactions(c fiber.Ctx) error {
 
 #### Frontend Tasks (4h)
 
-1. **Create review page** (`app/(dashboard)/review/page.tsx`):
++1. **Create review page** (`app/(dashboard)/review/page.tsx`) **following `design-system.md`**:
+
+- - Use `shadcn/ui` Data Table.
+- - Implement `shadcn/ui` Combobox for category selection.
 
 ```tsx
 "use client"
@@ -764,7 +795,11 @@ ORDER BY period;
 
 #### Frontend Tasks (4h)
 
-1. **Create dashboard page** (`app/(dashboard)/page.tsx`):
++1. **Create dashboard page** (`app/(dashboard)/page.tsx`) **following `design-system.md`**:
+
+- - Use `shadcn/ui` Card for KPI metrics.
+- - Implement `Recharts` using the color palette from the design system.
+    ...
 
 ```tsx
 "use client"
@@ -1235,46 +1270,55 @@ The project has access to specialized AI agents that should be used throughout t
 ### When to Use Agents in Daily Workflow
 
 **Day 1 (Authentication):**
+
 - Use `senior-engineer` to review Clerk integration architecture
 - Use `code-reviewer` after implementing Clerk middleware
 
 **Day 2 (CSV Parser):**
+
 - Use `backend-development:tdd-orchestrator` to implement parser with tests first
 - Use `golang-pro` to ensure idiomatic Go code with proper error handling
 - Use `code-reviewer` before committing parser implementation
 
 **Day 3 (File Upload):**
+
 - Use `backend-architect` to design S3 presigned URL flow
 - Use `golang-pro` for S3 client implementation
 - Use `code-reviewer` to check for security vulnerabilities in upload handler
 
 **Day 4 (Categorization Engine):**
+
 - Use `database-architect` to optimize rules table schema
 - Use `backend-development:tdd-orchestrator` for categorizer tests
 - Use `golang-pro` to optimize rule matching algorithm
 - Use `code-reviewer` for accuracy validation
 
 **Day 5 (Review Inbox):**
+
 - Use `backend-architect` to design filtered transactions API
 - Use `frontend-developer` for review UI components
 - Use `code-reviewer` for security check on update endpoints
 
 **Day 6-7 (Dashboard):**
+
 - Use `database-architect` to optimize aggregation queries
 - Use `frontend-developer` for chart components and responsive design
 - Use `code-reviewer` for performance validation
 
 **Day 8 (Security):**
+
 - Use `code-reviewer` proactively for security audit
 - Use `senior-engineer` to review overall security architecture
 - Use `golang-pro` to ensure proper error handling and input validation
 
 **Day 9 (Performance Testing):**
+
 - Use `database-architect` for index optimization
 - Use `golang-pro` for concurrency optimization
 - Use `senior-engineer` for architecture review
 
 **Day 10 (Documentation):**
+
 - Use `code-documentation:docs-architect` for API documentation
 - Use `code-documentation:tutorial-engineer` for user onboarding guides
 - Use `senior-engineer` for final architecture review

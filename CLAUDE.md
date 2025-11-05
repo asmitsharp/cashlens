@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cashlens is a financial analytics SaaS for Indian SMBs that automatically categorizes bank transactions with 85%+ accuracy. The system follows strict Test-Driven Development (TDD) principles.
 
 **Key Goals:**
+
 - 85%+ auto-categorization accuracy
 - 60-second time-to-dashboard
 - Support for 5 major Indian banks (HDFC, ICICI, SBI, Axis, Kotak)
@@ -14,18 +15,21 @@ cashlens is a financial analytics SaaS for Indian SMBs that automatically catego
 ## Tech Stack
 
 **Backend** (`cashlens-api/`):
+
 - Go 1.23+ with Fiber v3 framework
 - PostgreSQL 16 for data storage
 - Redis for caching (future)
 - AWS S3 for CSV file storage (LocalStack for local dev)
 
 **Frontend** (`cashlens-web/`):
+
 - Next.js 15 with App Router
 - React 19 + TypeScript
 - Tailwind CSS + shadcn/ui components
 - Clerk for authentication
 
 **Infrastructure:**
+
 - Docker Compose for local development
 - PostgreSQL, Redis, LocalStack (S3) services
 
@@ -210,6 +214,7 @@ upload_history (id, user_id, filename, file_key, total_rows, categorized_rows, a
 ```
 
 **Important Indexes:**
+
 - `transactions(user_id)` - Fast user queries
 - `transactions(txn_date DESC)` - Chronological sorting
 - `transactions(category)` - Category filtering
@@ -229,6 +234,7 @@ upload_history (id, user_id, filename, file_key, total_rows, categorized_rows, a
 ### Testing Patterns
 
 **Backend Tests:**
+
 ```go
 // internal/services/parser_test.go
 func TestParseCSV_HDFC(t *testing.T) {
@@ -245,15 +251,18 @@ func TestParseCSV_HDFC(t *testing.T) {
 ```
 
 **Frontend E2E Tests (Playwright):**
+
 ```typescript
 // tests/e2e/upload-flow.spec.ts
 test("complete upload and categorization flow", async ({ page }) => {
-    await page.goto("/upload")
-    await page.setInputFiles('input[type="file"]', filePath)
-    await expect(page.locator("text=Total Transactions")).toBeVisible()
+  await page.goto("/upload")
+  await page.setInputFiles('input[type="file"]', filePath)
+  await expect(page.locator("text=Total Transactions")).toBeVisible()
 
-    const accuracy = parseFloat(await page.locator('[data-testid="accuracy"]').textContent())
-    expect(accuracy).toBeGreaterThanOrEqual(85)
+  const accuracy = parseFloat(
+    await page.locator('[data-testid="accuracy"]').textContent()
+  )
+  expect(accuracy).toBeGreaterThanOrEqual(85)
 })
 ```
 
@@ -267,6 +276,7 @@ The system supports 5 bank formats through schema detection:
 4. **Transaction Normalization**: Converts to standard `ParsedTransaction` struct
 
 **Supported Banks:**
+
 - HDFC: "Date", "Narration", "Withdrawal Amt", "Deposit Amt"
 - ICICI: "Transaction Date", "Transaction Remarks", "Withdrawal Amount", "Deposit Amount"
 - SBI: "Txn Date", "Description", "Debit", "Credit"
@@ -285,6 +295,7 @@ The system supports 5 bank formats through schema detection:
 **Accuracy Requirement:** ≥85% on test datasets (5 banks × 100+ transactions each)
 
 **Categories:**
+
 - Cloud & Hosting
 - Payment Processing
 - Marketing
@@ -309,6 +320,7 @@ Use **Conventional Commits** with **Gitmoji**:
 ```
 
 **Common Types:**
+
 - ✨ `feat`: New feature
 - 🐛 `fix`: Bug fix
 - ♻️ `refactor`: Code refactoring
@@ -319,6 +331,7 @@ Use **Conventional Commits** with **Gitmoji**:
 **Scopes:** `auth`, `parser`, `categorizer`, `upload`, `dashboard`, `api`, `db`, `config`, `tests`, `infra`
 
 **Example:**
+
 ```bash
 ✨ feat(parser): detect HDFC bank CSV schema
 
@@ -331,14 +344,28 @@ Closes #12
 ```
 
 **Commit Only When:**
+
 1. ✅ All tests passing (`go test ./...` or `npm test`)
 2. ✅ No linter errors (`go vet ./...` or `npm run lint`)
 3. ✅ Single logical unit of work
 4. ✅ Code formatted (`go fmt ./...`)
 
+## 🎨 Design System & UI/UX
+
+**Primary Directive:** All frontend development (UI/UX) _must_ strictly adhere to the specifications in the **`design-system.md`** file.
+
+- **Theme:** The UI is a direct implementation of the "Pareto" theme. Do not deviate.
+- **Source of Truth:** `design-system.md` contains all color, typography, border-radius, and component style definitions.
+- **Component Library:** Use `shadcn/ui` components as the base. All components will be automatically styled by the theme definitions in `globals.css` and `tailwind.config.js`.
+- **Fonts:** Use `font-sans` (Inter) for all UI and `font-serif` (Lora) _only_ for landing page display headlines.
+- **Aesthetic:** Simple, minimal, spacious, and professional.
+
+---
+
 ## Environment Configuration
 
 **Backend (.env):**
+
 ```bash
 # Server
 PORT=8080
@@ -358,6 +385,7 @@ AWS_ENDPOINT=http://localhost:4566
 ```
 
 **Frontend (.env.local):**
+
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8080/v1
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
@@ -439,16 +467,19 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ### Backend Development Agents
 
 **TDD Orchestrator** (`backend-development:tdd-orchestrator` - Sonnet)
+
 - **When to use**: For enforcing TDD workflow, coordinating test-first development
 - **Best for**: Writing tests before implementation, ensuring red-green-refactor discipline
 - **Example**: "Use TDD to implement CSV parser for HDFC bank format"
 
 **Backend Architect** (`backend-development:backend-architect` - Sonnet)
+
 - **When to use**: Designing new API endpoints, microservices architecture, system design
 - **Best for**: API design, service boundaries, scalability planning
 - **Example**: "Design the categorization service API with clean architecture principles"
 
 **GraphQL Architect** (`backend-development:graphql-architect` - Sonnet)
+
 - **When to use**: If/when implementing GraphQL endpoints (future enhancement)
 - **Best for**: Schema design, federation, performance optimization
 - **Example**: "Design GraphQL schema for transaction querying"
@@ -456,6 +487,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ### Database Development
 
 **Database Architect** (`database-architect` - Opus)
+
 - **When to use**: Database schema design, migration planning, performance optimization
 - **Best for**: Table design, indexing strategy, query optimization, data modeling
 - **Example**: "Design optimized schema for storing 1M+ transactions with category filters"
@@ -464,14 +496,17 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ### Frontend Development
 
 **Frontend Developer** (`frontend-developer` - Sonnet)
+
 - **When to use**: Building UI components, state management, responsive design
 - **Best for**: React components, Next.js patterns, accessibility, performance
 - **Example**: "Build a responsive transaction review component with keyboard shortcuts"
 - **Example**: "Optimize dashboard charts for mobile viewport"
+- **Mandate:** All UI must strictly follow `design-system.md`
 
 ### Go-Specific Development
 
 **Golang Pro** (`golang-pro` - Sonnet)
+
 - **When to use**: Writing idiomatic Go code, concurrency patterns, optimization
 - **Best for**: Goroutines, channels, error handling, Go best practices
 - **Example**: "Refactor CSV parser to use goroutines for parallel processing"
@@ -480,17 +515,21 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ### Code Quality & Documentation
 
 **Code Reviewer** (`code-documentation:code-reviewer` - Sonnet)
+
 - **When to use**: After completing features, before merging PRs
 - **Best for**: Security vulnerabilities, performance issues, code quality
 - **Example**: "Review the authentication middleware for security issues"
+- **Mandate:** All frontend PRs _must_ be reviewed for compliance with `design-system.md`
 - **Proactive**: Should be used automatically after significant code changes
 
 **Docs Architect** (`code-documentation:docs-architect` - Sonnet)
+
 - **When to use**: Creating technical documentation, architecture guides
 - **Best for**: System documentation, API documentation, architecture deep-dives
 - **Example**: "Generate comprehensive API documentation for all endpoints"
 
 **Tutorial Engineer** (`code-documentation:tutorial-engineer` - Haiku)
+
 - **When to use**: Creating onboarding guides, tutorials, educational content
 - **Best for**: Step-by-step guides, feature tutorials, developer onboarding
 - **Example**: "Create a tutorial for adding a new bank CSV format"
@@ -498,6 +537,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ### Payment & Compliance
 
 **Payment Integration** (`payment-processing:payment-integration` - Haiku)
+
 - **When to use**: Future feature - subscription billing, payment processing
 - **Best for**: Stripe integration, PayPal, payment flows, webhooks
 - **Example**: "Implement Stripe subscription billing for premium tier"
@@ -505,6 +545,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ### Senior Engineering
 
 **Senior Engineer** (`senior-engineer` - Opus)
+
 - **When to use**: Complex system design, architectural decisions, technical leadership
 - **Best for**: High-level architecture, design patterns, technical strategy
 - **Example**: "Review overall system architecture for scaling to 100k users"
@@ -513,6 +554,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ## Agent Usage Patterns
 
 ### Pattern 1: Test-First Development
+
 ```bash
 # Start with TDD orchestrator for new features
 1. Use tdd-orchestrator to write tests first
@@ -521,6 +563,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ```
 
 ### Pattern 2: New Feature Development
+
 ```bash
 # Full feature cycle
 1. Use backend-architect to design API structure
@@ -531,6 +574,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ```
 
 ### Pattern 3: Performance Optimization
+
 ```bash
 # Optimization workflow
 1. Use golang-pro to identify bottlenecks
@@ -540,6 +584,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 ```
 
 ### Pattern 4: Documentation Sprint
+
 ```bash
 # Documentation generation
 1. Use docs-architect for system documentation
@@ -552,6 +597,7 @@ The project has specialized AI agents available for specific tasks. Use these ag
 When working with Claude Code, invoke agents using the Task tool with appropriate prompts:
 
 **Example: TDD for CSV Parser**
+
 ```
 "Use TDD approach to implement ICICI bank CSV parser. Write tests first,
 then implement parser.ParseCSV() function to handle ICICI format from testdata/icici_sample.csv.
@@ -559,12 +605,14 @@ Ensure 100% test coverage."
 ```
 
 **Example: Architecture Review**
+
 ```
 "Review the current API architecture in cmd/api/main.go and internal/handlers/*.go.
 Suggest improvements for scalability and maintainability following clean architecture principles."
 ```
 
 **Example: Database Optimization**
+
 ```
 "Analyze the transactions table schema and queries. Suggest optimal indexes for:
 1. Filtering by user_id + category
@@ -574,6 +622,7 @@ Provide migration SQL and performance estimates."
 ```
 
 **Example: Frontend Component**
+
 ```
 "Build a responsive transaction review component with:
 1. Data table with sorting/filtering
@@ -585,6 +634,7 @@ Use shadcn/ui components and Tailwind CSS."
 ```
 
 **Example: Code Review**
+
 ```
 "Review internal/handlers/upload.go for:
 1. Security vulnerabilities (file upload attacks, path traversal)
@@ -597,6 +647,7 @@ Provide specific fixes with code examples."
 ## Troubleshooting
 
 **Database connection fails:**
+
 ```bash
 docker-compose ps          # Check if db is running
 docker-compose logs db     # View database logs
@@ -604,16 +655,19 @@ psql postgres://postgres:dev123@localhost:5432/cashlens  # Test connection
 ```
 
 **Frontend can't reach API:**
+
 - Check `NEXT_PUBLIC_API_URL` in `.env.local`
 - Ensure backend is running: `curl http://localhost:8080/health`
 - Check browser console for CORS errors
 
 **Tests failing:**
+
 - Run `go mod tidy` or `npm install` to ensure dependencies are up-to-date
 - Check test database is empty: `docker-compose down -v && docker-compose up -d`
 - Verify test fixtures exist in `testdata/`
 
 **CSV parsing errors:**
+
 - Check bank format matches expected schema
 - Verify date format is supported
 - Test with minimal CSV (3-5 rows) first
