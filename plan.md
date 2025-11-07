@@ -420,11 +420,33 @@ type Transaction struct {
 
 ---
 
-### **Day 3: File Upload Flow + Multi-Format Support** (Wednesday)
+### **Day 3: File Upload Flow + Multi-Format Support** ✅ COMPLETE
 
 **Goal:** User can upload CSV/XLSX/PDF to S3, API processes it into database with multi-format parsing
 
-#### Backend Tasks (7h)
+**Status:** Core upload infrastructure completed successfully
+**Test Coverage:** Backend handlers 65.3%, Services 90.9%
+
+**Actual Implementation:**
+
+- ✅ Multi-format parser (CSV, XLSX, PDF via Python microservice)
+- ✅ S3 storage service with presigned URLs (LocalStack for dev)
+- ✅ Upload handler with security validation
+- ✅ Frontend upload page with drag-and-drop
+- ✅ LocalStack CORS configuration for browser uploads
+- ✅ Clerk JWT authentication integration
+- ✅ Helper scripts for LocalStack initialization
+
+**Issues Resolved:**
+
+- ✅ Fixed Clerk SDK initialization (added `clerk.SetKey()`)
+- ✅ Fixed LocalStack CORS blocking (added environment variables)
+- ✅ Fixed S3 bucket creation (created `cashlens-uploads-dev`)
+- ✅ Fixed upload response structure (added required fields for frontend)
+
+**Note:** Categorization integration pending (Day 4 task). Currently returns placeholder values (0% accuracy) to prevent frontend errors.
+
+#### Backend Tasks (7h) ✅ COMPLETE
 
 **Part 1: Multi-Format Parser (3h)**
 

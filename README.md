@@ -150,7 +150,7 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 2 - CSV Parser & Normalization ✅ COMPLETE
+### Current Phase: Day 3 - File Upload Flow ✅ COMPLETE
 
 - [x] **Day 0:** Project Setup ✅ COMPLETE
   - Backend & frontend structure
@@ -183,7 +183,30 @@ See `plan.md` for the complete 10-day MVP implementation plan.
   - 23 passing tests with 87.1% code coverage
   - Research document for multi-format support (CSV/XLSX/PDF)
 
+- [x] **Day 3:** File Upload Flow + Multi-Format Support ✅ COMPLETE
+  - Multi-format parser (CSV, XLSX, PDF via Python microservice)
+  - S3 storage service with presigned URLs
+  - Upload handlers with security validation (file type, size checks)
+  - Frontend upload page with drag-and-drop interface
+  - LocalStack S3 for local development with CORS configuration
+  - Clerk JWT authentication fully integrated and working
+  - Upload history database schema
+  - Helper scripts for LocalStack initialization
+
 **Key Implementation Details:**
+
+**File Upload Infrastructure:**
+- Storage Service: [internal/services/storage.go](cashlens-api/internal/services/storage.go) - S3 presigned URLs and file operations
+- Upload Handler: [internal/handlers/upload.go](cashlens-api/internal/handlers/upload.go) - Presigned URL generation and file processing
+- Multi-Format Parser: [internal/services/parser.go](cashlens-api/internal/services/parser.go) - CSV, XLSX, PDF parsing
+- Upload Page: [app/(dashboard)/upload/page.tsx](cashlens-web/app/(dashboard)/upload/page.tsx) - Drag-and-drop interface
+- Upload Migration: [internal/database/migrations/003_upload_history.sql](cashlens-api/internal/database/migrations/003_upload_history.sql)
+- LocalStack Init: [scripts/init-localstack.sh](scripts/init-localstack.sh) - S3 bucket setup script
+- Docker Config: [docker-compose.yml](docker-compose.yml) - LocalStack with CORS enabled
+
+**Authentication:**
+- Clerk Middleware: [internal/middleware/clerk_auth.go](cashlens-api/internal/middleware/clerk_auth.go) - JWT validation with Clerk SDK
+- Webhook Handler: [app/api/webhooks/clerk/route.ts](cashlens-web/app/api/webhooks/clerk/route.ts) - User sync
 
 **CSV Parser:**
 - Parser Service: [internal/services/parser.go](cashlens-api/internal/services/parser.go) - Multi-bank CSV parsing

@@ -5,8 +5,68 @@
 package db
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type UploadStatus string
+
+const (
+	UploadStatusPending    UploadStatus = "pending"
+	UploadStatusProcessing UploadStatus = "processing"
+	UploadStatusCompleted  UploadStatus = "completed"
+	UploadStatusFailed     UploadStatus = "failed"
+	UploadStatusPartial    UploadStatus = "partial"
+)
+
+func (e *UploadStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UploadStatus(s)
+	case string:
+		*e = UploadStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UploadStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUploadStatus struct {
+	UploadStatus UploadStatus `json:"upload_status"`
+	Valid        bool         `json:"valid"` // Valid is true if UploadStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUploadStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UploadStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UploadStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUploadStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UploadStatus), nil
+}
+
+// Configurable rules for detecting duplicate transactions
+type DuplicateDetectionRule struct {
+	ID       pgtype.UUID `json:"id"`
+	UserID   pgtype.UUID `json:"user_id"`
+	RuleName string      `json:"rule_name"`
+	IsActive pgtype.Bool `json:"is_active"`
+	// Fields to match when detecting duplicates
+	MatchFields []string           `json:"match_fields"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
 
 // Stores all parsed bank transactions from CSV uploads
 type Transaction struct {
@@ -23,6 +83,35 @@ type Transaction struct {
 	RawData   pgtype.Text        `json:"raw_data"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	UploadID  pgtype.UUID        `json:"upload_id"`
+}
+
+// Tracks all CSV file uploads with processing status and statistics
+type UploadHistory struct {
+	ID            pgtype.UUID `json:"id"`
+	UserID        pgtype.UUID `json:"user_id"`
+	Filename      string      `json:"filename"`
+	FileKey       string      `json:"file_key"`
+	FileSizeBytes pgtype.Int8 `json:"file_size_bytes"`
+	// SHA256 hash of file content for duplicate file detection
+	FileHash pgtype.Text `json:"file_hash"`
+	BankType pgtype.Text `json:"bank_type"`
+	// Current processing status: pending, processing, completed, failed, partial
+	Status                UploadStatus       `json:"status"`
+	ErrorMessage          pgtype.Text        `json:"error_message"`
+	ProcessingStartedAt   pgtype.Timestamptz `json:"processing_started_at"`
+	ProcessingCompletedAt pgtype.Timestamptz `json:"processing_completed_at"`
+	TotalRows             pgtype.Int4        `json:"total_rows"`
+	ParsedRows            pgtype.Int4        `json:"parsed_rows"`
+	CategorizedRows       pgtype.Int4        `json:"categorized_rows"`
+	DuplicateRows         pgtype.Int4        `json:"duplicate_rows"`
+	ErrorRows             pgtype.Int4        `json:"error_rows"`
+	// Percentage of successfully categorized transactions
+	AccuracyPercent pgtype.Numeric `json:"accuracy_percent"`
+	// Total processing time in milliseconds
+	ProcessingDurationMs pgtype.Int4        `json:"processing_duration_ms"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 }
 
 // User accounts synchronized from Clerk authentication
@@ -36,4 +125,18 @@ type User struct {
 	FullName  pgtype.Text        `json:"full_name"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserUploadStat struct {
+	UserID             pgtype.UUID `json:"user_id"`
+	Email              string      `json:"email"`
+	TotalUploads       int64       `json:"total_uploads"`
+	SuccessfulUploads  int64       `json:"successful_uploads"`
+	FailedUploads      int64       `json:"failed_uploads"`
+	TotalRowsProcessed int64       `json:"total_rows_processed"`
+	TotalCategorized   int64       `json:"total_categorized"`
+	AvgAccuracyPercent float64     `json:"avg_accuracy_percent"`
+	AvgProcessingMs    float64     `json:"avg_processing_ms"`
+	LastUploadAt       interface{} `json:"last_upload_at"`
+	TotalTransactions  int64       `json:"total_transactions"`
 }

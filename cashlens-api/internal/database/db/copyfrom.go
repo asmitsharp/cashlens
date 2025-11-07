@@ -47,3 +47,47 @@ func (r iteratorForBulkCreateTransactions) Err() error {
 func (q *Queries) BulkCreateTransactions(ctx context.Context, arg []BulkCreateTransactionsParams) (int64, error) {
 	return q.db.CopyFrom(ctx, []string{"transactions"}, []string{"user_id", "txn_date", "description", "amount", "txn_type", "category", "is_reviewed", "raw_data"}, &iteratorForBulkCreateTransactions{rows: arg})
 }
+
+// iteratorForBulkInsertTransactions implements pgx.CopyFromSource.
+type iteratorForBulkInsertTransactions struct {
+	rows                 []BulkInsertTransactionsParams
+	skippedFirstNextCall bool
+}
+
+func (r *iteratorForBulkInsertTransactions) Next() bool {
+	if len(r.rows) == 0 {
+		return false
+	}
+	if !r.skippedFirstNextCall {
+		r.skippedFirstNextCall = true
+		return true
+	}
+	r.rows = r.rows[1:]
+	return len(r.rows) > 0
+}
+
+func (r iteratorForBulkInsertTransactions) Values() ([]interface{}, error) {
+	return []interface{}{
+		r.rows[0].UserID,
+		r.rows[0].UploadID,
+		r.rows[0].TxnDate,
+		r.rows[0].Description,
+		r.rows[0].Amount,
+		r.rows[0].TxnType,
+		r.rows[0].Category,
+		r.rows[0].IsReviewed,
+		r.rows[0].RawData,
+	}, nil
+}
+
+func (r iteratorForBulkInsertTransactions) Err() error {
+	return nil
+}
+
+// ============================================
+// Bulk Transaction Insert Queries (Optimized)
+// ============================================
+// Bulk insert transactions using COPY (most efficient for 1000+ rows)
+func (q *Queries) BulkInsertTransactions(ctx context.Context, arg []BulkInsertTransactionsParams) (int64, error) {
+	return q.db.CopyFrom(ctx, []string{"transactions"}, []string{"user_id", "upload_id", "txn_date", "description", "amount", "txn_type", "category", "is_reviewed", "raw_data"}, &iteratorForBulkInsertTransactions{rows: arg})
+}

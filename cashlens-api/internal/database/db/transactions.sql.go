@@ -73,7 +73,7 @@ INSERT INTO transactions (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
 )
-RETURNING id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at
+RETURNING id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id
 `
 
 type CreateTransactionParams struct {
@@ -111,6 +111,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		&i.RawData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UploadID,
 	)
 	return i, err
 }
@@ -136,7 +137,7 @@ func (q *Queries) DeleteUserTransactions(ctx context.Context, userID pgtype.UUID
 }
 
 const getAllTransactions = `-- name: GetAllTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE user_id = $1
 ORDER BY txn_date DESC
 `
@@ -162,6 +163,7 @@ func (q *Queries) GetAllTransactions(ctx context.Context, userID pgtype.UUID) ([
 			&i.RawData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UploadID,
 		); err != nil {
 			return nil, err
 		}
@@ -174,7 +176,7 @@ func (q *Queries) GetAllTransactions(ctx context.Context, userID pgtype.UUID) ([
 }
 
 const getCategorizedTransactions = `-- name: GetCategorizedTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE user_id = $1
   AND category IS NOT NULL
 ORDER BY txn_date DESC
@@ -208,6 +210,7 @@ func (q *Queries) GetCategorizedTransactions(ctx context.Context, arg GetCategor
 			&i.RawData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UploadID,
 		); err != nil {
 			return nil, err
 		}
@@ -220,7 +223,7 @@ func (q *Queries) GetCategorizedTransactions(ctx context.Context, arg GetCategor
 }
 
 const getTransactionByID = `-- name: GetTransactionByID :one
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE id = $1
 LIMIT 1
 `
@@ -240,6 +243,7 @@ func (q *Queries) GetTransactionByID(ctx context.Context, id pgtype.UUID) (Trans
 		&i.RawData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UploadID,
 	)
 	return i, err
 }
@@ -278,7 +282,7 @@ func (q *Queries) GetTransactionStats(ctx context.Context, userID pgtype.UUID) (
 }
 
 const getTransactionsByCategory = `-- name: GetTransactionsByCategory :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE user_id = $1
   AND category = $2
 ORDER BY txn_date DESC
@@ -318,6 +322,7 @@ func (q *Queries) GetTransactionsByCategory(ctx context.Context, arg GetTransact
 			&i.RawData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UploadID,
 		); err != nil {
 			return nil, err
 		}
@@ -330,7 +335,7 @@ func (q *Queries) GetTransactionsByCategory(ctx context.Context, arg GetTransact
 }
 
 const getTransactionsByDateRange = `-- name: GetTransactionsByDateRange :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE user_id = $1
   AND txn_date BETWEEN $2 AND $3
 ORDER BY txn_date DESC
@@ -363,6 +368,7 @@ func (q *Queries) GetTransactionsByDateRange(ctx context.Context, arg GetTransac
 			&i.RawData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UploadID,
 		); err != nil {
 			return nil, err
 		}
@@ -375,7 +381,7 @@ func (q *Queries) GetTransactionsByDateRange(ctx context.Context, arg GetTransac
 }
 
 const getUncategorizedTransactions = `-- name: GetUncategorizedTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE user_id = $1
   AND category IS NULL
 ORDER BY txn_date DESC
@@ -409,6 +415,7 @@ func (q *Queries) GetUncategorizedTransactions(ctx context.Context, arg GetUncat
 			&i.RawData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UploadID,
 		); err != nil {
 			return nil, err
 		}
@@ -421,7 +428,7 @@ func (q *Queries) GetUncategorizedTransactions(ctx context.Context, arg GetUncat
 }
 
 const getUserTransactions = `-- name: GetUserTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at FROM transactions
+SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
 WHERE user_id = $1
 ORDER BY txn_date DESC
 LIMIT $2 OFFSET $3
@@ -454,6 +461,7 @@ func (q *Queries) GetUserTransactions(ctx context.Context, arg GetUserTransactio
 			&i.RawData,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UploadID,
 		); err != nil {
 			return nil, err
 		}
@@ -474,7 +482,7 @@ SET description = COALESCE($2, description),
     is_reviewed = COALESCE($6, is_reviewed),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at
+RETURNING id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id
 `
 
 type UpdateTransactionParams struct {
@@ -508,6 +516,7 @@ func (q *Queries) UpdateTransaction(ctx context.Context, arg UpdateTransactionPa
 		&i.RawData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UploadID,
 	)
 	return i, err
 }
@@ -518,7 +527,7 @@ SET category = $2,
     is_reviewed = $3,
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at
+RETURNING id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id
 `
 
 type UpdateTransactionCategoryParams struct {
@@ -542,6 +551,7 @@ func (q *Queries) UpdateTransactionCategory(ctx context.Context, arg UpdateTrans
 		&i.RawData,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UploadID,
 	)
 	return i, err
 }

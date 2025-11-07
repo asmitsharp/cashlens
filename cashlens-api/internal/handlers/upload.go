@@ -204,9 +204,16 @@ func buildProcessSummary(fileKey, filename string, transactions []models.ParsedT
 	// Detect bank from filename
 	bank := detectBankFromFilename(filename)
 
+	// TODO: Integrate categorizer service to get actual categorized count
+	// For now, return placeholder values to prevent frontend errors
+	categorizedCount := 0
+	accuracyPercent := 0.0
+
 	return fiber.Map{
 		"file_key":            fileKey,
-		"total_rows":          totalRows,
+		"total_transactions":  totalRows,
+		"categorized_count":   categorizedCount,
+		"accuracy_percent":    accuracyPercent,
 		"transactions_parsed": totalRows,
 		"bank_detected":       bank,
 		"date_range":          dateRange,
