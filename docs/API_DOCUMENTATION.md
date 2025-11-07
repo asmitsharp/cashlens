@@ -26,6 +26,12 @@ The Cashlens API is a RESTful service built with Go 1.23+ and Fiber v3 framework
 
 ---
 
+## Related Documentation
+
+- **[Categorization Service Architecture](CATEGORIZATION_SERVICE.md)** - Comprehensive guide to the auto-categorization engine, matching strategies, and performance optimization
+
+---
+
 ## Authentication
 
 ### Clerk JWT Authentication
@@ -400,8 +406,46 @@ curl "http://localhost:8080/v1/summary?start_date=2024-01-01&end_date=2024-03-31
 
 ### Categorization Rules
 
+The Rules API provides endpoints for managing categorization rules that power the auto-categorization engine. Rules can be global (system-wide) or user-specific (higher priority).
+
+#### `GET /v1/rules`
+Get all user-specific categorization rules.
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "rules": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "user_id": "user_2abc123",
+      "keyword": "digitalocean",
+      "category": "Cloud & Hosting",
+      "priority": 100,
+      "match_type": "substring",
+      "similarity_threshold": 0.3,
+      "is_active": true,
+      "created_at": "2024-01-16T10:30:00Z",
+      "updated_at": "2024-01-16T10:30:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+**Implementation:** [internal/handlers/rules.go:46](cashlens-api/internal/handlers/rules.go#L46)
+
+**Example:**
+```bash
+curl "http://localhost:8080/v1/rules" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
 #### `GET /v1/rules/global`
-Get all active global categorization rules.
+Get all active global categorization rules (142 pre-seeded rules).
 
 **Authentication:** Required
 
@@ -411,21 +455,32 @@ Get all active global categorization rules.
   "rules": [
     {
       "id": "uuid",
-      "keyword": "aws",
-      "category": "Cloud & Hosting",
-      "priority": 100,
-      "is_active": true
+      "keyword": "^(NEFT|IMPS|RTGS).*(SALARY|SAL|EMP|PAYROLL)",
+      "category": "Salaries",
+      "priority": 10,
+      "match_type": "regex",
+      "similarity_threshold": 0.0,
+      "is_active": true,
+      "created_at": "2024-01-16T10:30:00Z",
+      "updated_at": "2024-01-16T10:30:00Z"
     },
     {
       "id": "uuid",
-      "keyword": "salary",
-      "category": "Salaries",
-      "priority": 90,
-      "is_active": true
+      "keyword": "aws",
+      "category": "Cloud & Hosting",
+      "priority": 10,
+      "match_type": "substring",
+      "similarity_threshold": 0.3,
+      "is_active": true,
+      "created_at": "2024-01-16T10:30:00Z",
+      "updated_at": "2024-01-16T10:30:00Z"
     }
-  ]
+  ],
+  "count": 142
 }
 ```
+
+**Implementation:** [internal/handlers/rules.go:85](cashlens-api/internal/handlers/rules.go#L85)
 
 **Example:**
 ```bash
@@ -435,36 +490,7 @@ curl "http://localhost:8080/v1/rules/global" \
 
 ---
 
-#### `GET /v1/rules/user`
-Get user-specific categorization rules (higher priority than global).
-
-**Authentication:** Required
-
-**Response:**
-```json
-{
-  "rules": [
-    {
-      "id": "uuid",
-      "user_id": "user_2abc123",
-      "keyword": "digitalocean",
-      "category": "Cloud & Hosting",
-      "priority": 100,
-      "is_active": true
-    }
-  ]
-}
-```
-
-**Example:**
-```bash
-curl "http://localhost:8080/v1/rules/user" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-#### `POST /v1/rules/user`
+#### `POST /v1/rules`
 Create a new user-specific categorization rule.
 
 **Authentication:** Required
@@ -474,34 +500,103 @@ Create a new user-specific categorization rule.
 {
   "keyword": "digitalocean",
   "category": "Cloud & Hosting",
-  "priority": 100
+  "priority": 100,
+  "match_type": "substring",
+  "similarity_threshold": 0.3
+}
+```
+
+**Fields:**
+- `keyword` (required): The keyword or regex pattern to match
+- `category` (required): Category name to assign
+- `priority` (optional, default: 100): Rule priority (user rules typically 100, global rules 1-10)
+- `match_type` (optional, default: "substring"): Matching strategy - "substring", "exact", "regex", or "fuzzy"
+- `similarity_threshold` (optional, default: 0.3): Threshold for fuzzy matching (0.0-1.0)
+
+**Response:**
+```json
+{
+  "rule": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "user_2abc123",
+    "keyword": "digitalocean",
+    "category": "Cloud & Hosting",
+    "priority": 100,
+    "match_type": "substring",
+    "similarity_threshold": 0.3,
+    "is_active": true,
+    "created_at": "2024-01-16T10:30:00Z",
+    "updated_at": "2024-01-16T10:30:00Z"
+  },
+  "message": "rule created successfully"
+}
+```
+
+**Implementation:** [internal/handlers/rules.go:103](cashlens-api/internal/handlers/rules.go#L103)
+
+**Example:**
+```bash
+curl -X POST "http://localhost:8080/v1/rules" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "keyword": "digitalocean",
+    "category": "Cloud & Hosting",
+    "priority": 100,
+    "match_type": "substring",
+    "similarity_threshold": 0.3
+  }'
+```
+
+---
+
+#### `PUT /v1/rules/:id`
+Update an existing user-specific rule.
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "category": "Infrastructure",
+  "priority": 95,
+  "match_type": "fuzzy",
+  "similarity_threshold": 0.7,
+  "is_active": true
 }
 ```
 
 **Response:**
 ```json
 {
-  "id": "uuid",
-  "user_id": "user_2abc123",
-  "keyword": "digitalocean",
-  "category": "Cloud & Hosting",
-  "priority": 100,
-  "is_active": true,
-  "created_at": "2024-01-16T10:30:00Z"
+  "rule": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "user_id": "user_2abc123",
+    "keyword": "digitalocean",
+    "category": "Infrastructure",
+    "priority": 95,
+    "match_type": "fuzzy",
+    "similarity_threshold": 0.7,
+    "is_active": true,
+    "updated_at": "2024-01-16T11:00:00Z"
+  },
+  "message": "rule updated successfully"
 }
 ```
 
+**Implementation:** [internal/handlers/rules.go:186](cashlens-api/internal/handlers/rules.go#L186)
+
 **Example:**
 ```bash
-curl -X POST "http://localhost:8080/v1/rules/user" \
+curl -X PUT "http://localhost:8080/v1/rules/550e8400-e29b-41d4-a716-446655440000" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"keyword":"digitalocean","category":"Cloud & Hosting","priority":100}'
+  -d '{"category":"Infrastructure","priority":95,"is_active":true}'
 ```
 
 ---
 
-#### `DELETE /v1/rules/user/:id`
+#### `DELETE /v1/rules/:id`
 Delete a user-specific categorization rule.
 
 **Authentication:** Required
@@ -509,13 +604,95 @@ Delete a user-specific categorization rule.
 **Response:**
 ```json
 {
-  "message": "Rule deleted successfully"
+  "message": "rule deleted successfully"
 }
 ```
 
+**Implementation:** [internal/handlers/rules.go:263](cashlens-api/internal/handlers/rules.go#L263)
+
 **Example:**
 ```bash
-curl -X DELETE "http://localhost:8080/v1/rules/user/550e8400-e29b-41d4-a716-446655440000" \
+curl -X DELETE "http://localhost:8080/v1/rules/550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+#### `GET /v1/rules/stats`
+Get categorization statistics and performance metrics.
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "global_rules_count": 142,
+  "user_rules_count": 8,
+  "global_categories_count": 15,
+  "user_categories_count": 3,
+  "cache_size": 1
+}
+```
+
+**Fields:**
+- `global_rules_count`: Total active global rules
+- `user_rules_count`: Total active user rules for authenticated user
+- `global_categories_count`: Unique categories in global rules
+- `user_categories_count`: Unique categories in user rules
+- `cache_size`: Number of users with cached rules in memory
+
+**Implementation:** [internal/handlers/rules.go:323](cashlens-api/internal/handlers/rules.go#L323)
+
+**Example:**
+```bash
+curl "http://localhost:8080/v1/rules/stats" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+#### `GET /v1/rules/search`
+Search rules by keyword with fuzzy matching.
+
+**Authentication:** Required
+
+**Query Parameters:**
+- `q` (required): Search query
+- `limit` (optional, default: 20, max: 100): Number of results
+
+**Response:**
+```json
+{
+  "user_rules": [
+    {
+      "id": "uuid",
+      "keyword": "digitalocean",
+      "category": "Cloud & Hosting",
+      "priority": 100
+    }
+  ],
+  "global_rules": [
+    {
+      "id": "uuid",
+      "keyword": "aws",
+      "category": "Cloud & Hosting",
+      "priority": 10
+    }
+  ],
+  "query": "digital"
+}
+```
+
+**Implementation:** [internal/handlers/rules.go:375](cashlens-api/internal/handlers/rules.go#L375)
+
+**Example:**
+```bash
+# Search for cloud-related rules
+curl "http://localhost:8080/v1/rules/search?q=cloud&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Search for salary patterns
+curl "http://localhost:8080/v1/rules/search?q=salary" \
   -H "Authorization: Bearer $TOKEN"
 ```
 

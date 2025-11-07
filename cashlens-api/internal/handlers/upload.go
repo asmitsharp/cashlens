@@ -1,14 +1,18 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/ashmitsharp/cashlens-api/internal/database/db"
 	"github.com/ashmitsharp/cashlens-api/internal/models"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const (
@@ -40,25 +44,49 @@ type Parser interface {
 	ParseFile(file io.Reader, filename string) ([]models.ParsedTransaction, error)
 }
 
+// Categorizer interface defines methods for categorizing transactions
+type Categorizer interface {
+	Categorize(ctx context.Context, description string, userID uuid.UUID) (string, error)
+	LoadGlobalRules(ctx context.Context) error
+	InvalidateUserCache(userID uuid.UUID)
+	GetStats(ctx context.Context, userID uuid.UUID) (map[string]interface{}, error)
+}
+
 // UploadHandler handles file upload-related requests
 type UploadHandler struct {
-	storage StorageService
-	parser  Parser
+	storage     StorageService
+	parser      Parser
+	categorizer Categorizer
+	db          *db.Queries
 }
 
 // NewUploadHandler creates a new upload handler instance (backward compatible)
 func NewUploadHandler(storage StorageService) *UploadHandler {
 	return &UploadHandler{
-		storage: storage,
-		parser:  nil,
+		storage:     storage,
+		parser:      nil,
+		categorizer: nil,
+		db:          nil,
 	}
 }
 
 // NewUploadHandlerWithParser creates a new upload handler with parser support
 func NewUploadHandlerWithParser(storage StorageService, parser Parser) *UploadHandler {
 	return &UploadHandler{
-		storage: storage,
-		parser:  parser,
+		storage:     storage,
+		parser:      parser,
+		categorizer: nil,
+		db:          nil,
+	}
+}
+
+// NewUploadHandlerFull creates a fully configured upload handler
+func NewUploadHandlerFull(storage StorageService, parser Parser, categorizer Categorizer, database *db.Queries) *UploadHandler {
+	return &UploadHandler{
+		storage:     storage,
+		parser:      parser,
+		categorizer: categorizer,
+		db:          database,
 	}
 }
 
@@ -183,8 +211,86 @@ func (h *UploadHandler) ProcessUpload(c fiber.Ctx) error {
 		})
 	}
 
-	// 7. Build and return summary response
-	summary := buildProcessSummary(req.FileKey, filename, transactions)
+	// 7. Categorize and save transactions if categorizer and db are available
+	var categorizedCount int
+	var accuracyPercent float64
+
+	if h.categorizer != nil && h.db != nil {
+		// Parse user ID from string to UUID
+		userUUID, err := uuid.Parse(userID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "invalid user ID format",
+			})
+		}
+
+		// Ensure categorizer has loaded global rules
+		if err := h.categorizer.LoadGlobalRules(c.Context()); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error":   "failed to load categorization rules",
+				"details": err.Error(),
+			})
+		}
+
+		// Categorize and save each transaction
+		for _, txn := range transactions {
+			// Categorize transaction
+			category, err := h.categorizer.Categorize(c.Context(), txn.Description, userUUID)
+			if err != nil {
+				// Log error but continue processing
+				fmt.Printf("Failed to categorize transaction: %v\n", err)
+				category = ""
+			}
+
+			if category != "" {
+				categorizedCount++
+			}
+
+			// Convert uuid.UUID to pgtype.UUID
+			var pgUserID pgtype.UUID
+			pgUserID.Bytes = userUUID
+			pgUserID.Valid = true
+
+			// Convert float64 to pgtype.Numeric
+			var pgAmount pgtype.Numeric
+			pgAmount.Scan(txn.Amount)
+
+			// Determine transaction type
+			txnType := txn.TxnType
+			if txnType == "" {
+				if txn.Amount > 0 {
+					txnType = "credit"
+				} else {
+					txnType = "debit"
+				}
+			}
+
+			// Save transaction to database
+			_, err = h.db.CreateTransaction(c.Context(), db.CreateTransactionParams{
+				UserID:      pgUserID,
+				TxnDate:     pgtype.Date{Time: txn.TxnDate, Valid: true},
+				Description: txn.Description,
+				Amount:      pgAmount,
+				TxnType:     txnType,
+				Category:    pgtype.Text{String: category, Valid: category != ""},
+				IsReviewed:  false,
+				RawData:     pgtype.Text{String: txn.RawData, Valid: txn.RawData != ""},
+			})
+
+			if err != nil {
+				// Log error but continue processing other transactions
+				fmt.Printf("Failed to save transaction: %v\n", err)
+			}
+		}
+
+		// Calculate accuracy
+		if len(transactions) > 0 {
+			accuracyPercent = (float64(categorizedCount) / float64(len(transactions))) * 100
+		}
+	}
+
+	// 8. Build and return summary response
+	summary := buildProcessSummaryWithCategorization(req.FileKey, filename, transactions, categorizedCount, accuracyPercent)
 	return c.JSON(summary)
 }
 
@@ -194,8 +300,13 @@ func isFileOwnedByUser(fileKey, userID string) bool {
 	return strings.HasPrefix(fileKey, expectedPrefix)
 }
 
-// buildProcessSummary creates the summary response from parsed transactions
+// buildProcessSummary creates the summary response from parsed transactions (deprecated)
 func buildProcessSummary(fileKey, filename string, transactions []models.ParsedTransaction) fiber.Map {
+	return buildProcessSummaryWithCategorization(fileKey, filename, transactions, 0, 0.0)
+}
+
+// buildProcessSummaryWithCategorization creates the summary response with categorization stats
+func buildProcessSummaryWithCategorization(fileKey, filename string, transactions []models.ParsedTransaction, categorizedCount int, accuracyPercent float64) fiber.Map {
 	totalRows := len(transactions)
 
 	// Calculate date range
@@ -204,19 +315,18 @@ func buildProcessSummary(fileKey, filename string, transactions []models.ParsedT
 	// Detect bank from filename
 	bank := detectBankFromFilename(filename)
 
-	// TODO: Integrate categorizer service to get actual categorized count
-	// For now, return placeholder values to prevent frontend errors
-	categorizedCount := 0
-	accuracyPercent := 0.0
+	uncategorizedCount := totalRows - categorizedCount
 
 	return fiber.Map{
 		"file_key":            fileKey,
-		"total_transactions":  totalRows,
-		"categorized_count":   categorizedCount,
+		"total_rows":          totalRows,
+		"categorized":         categorizedCount,
+		"uncategorized":       uncategorizedCount,
 		"accuracy_percent":    accuracyPercent,
 		"transactions_parsed": totalRows,
 		"bank_detected":       bank,
 		"date_range":          dateRange,
+		"status":              "success",
 	}
 }
 

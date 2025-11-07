@@ -68,6 +68,19 @@ type DuplicateDetectionRule struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
+// System-wide categorization rules applied to all users
+type GlobalCategorizationRule struct {
+	ID                  pgtype.UUID        `json:"id"`
+	Keyword             string             `json:"keyword"`
+	Category            string             `json:"category"`
+	Priority            pgtype.Int4        `json:"priority"`
+	MatchType           pgtype.Text        `json:"match_type"`
+	SimilarityThreshold pgtype.Numeric     `json:"similarity_threshold"`
+	IsActive            pgtype.Bool        `json:"is_active"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
 // Stores all parsed bank transactions from CSV uploads
 type Transaction struct {
 	ID          pgtype.UUID `json:"id"`
@@ -125,6 +138,20 @@ type User struct {
 	FullName  pgtype.Text        `json:"full_name"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+// User-specific rules that override global rules (higher priority)
+type UserCategorizationRule struct {
+	ID                  pgtype.UUID        `json:"id"`
+	UserID              pgtype.UUID        `json:"user_id"`
+	Keyword             string             `json:"keyword"`
+	Category            string             `json:"category"`
+	Priority            pgtype.Int4        `json:"priority"`
+	MatchType           pgtype.Text        `json:"match_type"`
+	SimilarityThreshold pgtype.Numeric     `json:"similarity_threshold"`
+	IsActive            pgtype.Bool        `json:"is_active"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 }
 
 type UserUploadStat struct {
