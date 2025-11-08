@@ -1,6 +1,5 @@
 // API client functions for upload flow
 
-import { auth } from "@clerk/nextjs/server"
 import type {
   PresignedUrlResponse,
   ProcessResponse,
@@ -178,4 +177,42 @@ export async function uploadFile(
   const result = await processUploadedFile(file_key, token)
 
   return result
+}
+
+/**
+ * Get upload history for the current user
+ */
+export async function getUploadHistory(
+  token: string,
+  params?: {
+    limit?: number
+    offset?: number
+  }
+): Promise<{
+  uploads: any[]
+  limit: number
+  offset: number
+}> {
+  const queryParams = new URLSearchParams()
+  if (params?.limit) queryParams.append("limit", params.limit.toString())
+  if (params?.offset) queryParams.append("offset", params.offset.toString())
+
+  const url = `${API_URL}/upload/history?${queryParams.toString()}`
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(
+      error.error || `Failed to fetch upload history: ${response.statusText}`
+    )
+  }
+
+  return response.json()
 }

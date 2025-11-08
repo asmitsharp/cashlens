@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/joho/godotenv"
 	"github.com/ashmitsharp/cashlens-api/internal/database"
+	"github.com/ashmitsharp/cashlens-api/internal/database/db"
 	"github.com/ashmitsharp/cashlens-api/internal/handlers"
 	"github.com/ashmitsharp/cashlens-api/internal/middleware"
 	"github.com/ashmitsharp/cashlens-api/internal/services"
@@ -19,13 +20,16 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := database.Connect()
+	pool, err := database.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer pool.Close()
 
 	log.Println("✓ Connected to database successfully")
+
+	// Create database queries instance
+	queries := db.New(pool)
 
 	// Initialize services
 	// Storage service for S3 operations
@@ -43,13 +47,19 @@ func main() {
 	parser := services.NewParser()
 	log.Println("✓ Parser service initialized successfully")
 
+	// Categorizer service for transaction categorization
+	categorizer := services.NewCategorizer(queries)
+	log.Println("✓ Categorizer service initialized successfully")
+
 	// File validator service (ready for future integration)
 	_ = services.NewFileValidator(10 * 1024 * 1024) // 10MB max
 	log.Println("✓ File validator service initialized successfully")
 
 	// Initialize handlers
-	usersHandler := handlers.NewUsersHandler(db)
-	uploadHandler := handlers.NewUploadHandlerWithParser(storageService, parser)
+	usersHandler := handlers.NewUsersHandler(pool) // UsersHandler uses pool directly
+	uploadHandler := handlers.NewUploadHandlerFull(storageService, parser, categorizer, queries)
+	transactionHandler := handlers.NewTransactionHandler(queries, categorizer)
+	rulesHandler := handlers.NewRulesHandler(queries, categorizer)
 
 	app := fiber.New(fiber.Config{
 		AppName: "cashlens API v1.0",
@@ -97,6 +107,22 @@ func main() {
 	// Upload routes
 	protected.Get("/upload/presigned-url", uploadHandler.GetPresignedURL)
 	protected.Post("/upload/process", uploadHandler.ProcessUpload)
+	protected.Get("/upload/history", uploadHandler.GetUploadHistory)
+
+	// Transaction routes
+	protected.Get("/transactions", transactionHandler.GetTransactions)
+	protected.Get("/transactions/stats", transactionHandler.GetTransactionStats)
+	protected.Put("/transactions/:id", transactionHandler.UpdateTransaction)
+	protected.Put("/transactions/bulk", transactionHandler.BulkUpdateTransactions)
+
+	// Categorization rules routes
+	protected.Get("/rules", rulesHandler.GetUserRules)
+	protected.Get("/rules/global", rulesHandler.GetGlobalRules)
+	protected.Get("/rules/stats", rulesHandler.GetRuleStats)
+	protected.Get("/rules/search", rulesHandler.SearchRules)
+	protected.Post("/rules", rulesHandler.CreateUserRule)
+	protected.Put("/rules/:id", rulesHandler.UpdateUserRule)
+	protected.Delete("/rules/:id", rulesHandler.DeleteUserRule)
 
 	log.Println("✓ All routes configured successfully")
 	log.Println("")

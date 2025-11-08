@@ -1,20 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@clerk/nextjs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { DropzoneArea } from "@/components/upload/DropzoneArea"
 import { UploadProgress } from "@/components/upload/UploadProgress"
 import { UploadSummary } from "@/components/upload/UploadSummary"
-import { AlertCircle, ArrowLeft } from "lucide-react"
-import { uploadFile, validateFile } from "@/lib/upload-api"
+import { AlertCircle, ArrowLeft, FileText, CheckCircle, XCircle, Clock } from "lucide-react"
+import { uploadFile, validateFile, getUploadHistory } from "@/lib/upload-api"
 import type { UploadState, ProcessResponse } from "@/types/upload"
 
 export default function UploadPage() {
   const { getToken } = useAuth()
   const [uploadState, setUploadState] = useState<UploadState>({ status: "idle" })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadHistory, setUploadHistory] = useState<any[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
+
+  // Load upload history on component mount
+  useEffect(() => {
+    loadUploadHistory()
+  }, [])
+
+  // Reload history after successful upload
+  useEffect(() => {
+    if (uploadState.status === "success") {
+      loadUploadHistory()
+    }
+  }, [uploadState.status])
+
+  const loadUploadHistory = async () => {
+    try {
+      const token = await getToken()
+      if (!token) return
+
+      const data = await getUploadHistory(token, { limit: 10 })
+      setUploadHistory(data.uploads || [])
+    } catch (error) {
+      console.error("Failed to load upload history:", error)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
 
   const handleFileSelect = (file: File) => {
     // Validate file
@@ -318,6 +347,119 @@ export default function UploadPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Upload History */}
+      {uploadHistory.length > 0 && (
+        <Card className="rounded-2xl border-border">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">Upload History</CardTitle>
+            <CardDescription>
+              Your recent file uploads and processing status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {uploadHistory.map((upload) => {
+                const status = upload.status
+                const isCompleted = status === "completed"
+                const isFailed = status === "failed"
+
+                // Bank logo mapping
+                const getBankLogo = (bankType: string) => {
+                  const logos: Record<string, string> = {
+                    'HDFC': '🏦',
+                    'ICICI': '🏦',
+                    'SBI': '🏦',
+                    'Axis': '🏦',
+                    'Kotak': '🏦'
+                  }
+                  return logos[bankType] || '🏦'
+                }
+
+                return (
+                  <div
+                    key={upload.id}
+                    className="flex items-center justify-between rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50"
+                  >
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                        isCompleted ? "bg-success/10" :
+                        isFailed ? "bg-destructive/10" :
+                        "bg-warning/10"
+                      }`}>
+                        {isCompleted ? (
+                          <CheckCircle className="h-5 w-5 text-success" />
+                        ) : isFailed ? (
+                          <XCircle className="h-5 w-5 text-destructive" />
+                        ) : (
+                          <Clock className="h-5 w-5 text-warning" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground mb-1">
+                          {upload.filename}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          {upload.bank_type && (
+                            <>
+                              <span className="flex items-center gap-1">
+                                <span>{getBankLogo(upload.bank_type)}</span>
+                                <span className="font-medium">{upload.bank_type}</span>
+                              </span>
+                              <span>•</span>
+                            </>
+                          )}
+                          <span>
+                            {new Date(upload.created_at).toLocaleDateString("en-IN", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}
+                          </span>
+                          {isCompleted && (
+                            <>
+                              <span>•</span>
+                              <span>{upload.total_rows || 0} transactions</span>
+                              {upload.accuracy_percent && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-success">
+                                    {upload.accuracy_percent}% accuracy
+                                  </span>
+                                </>
+                              )}
+                            </>
+                          )}
+                          {isFailed && upload.error_message && (
+                            <>
+                              <span>•</span>
+                              <span className="text-destructive">{upload.error_message}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Badge
+                      variant={
+                        isCompleted ? "default" :
+                        isFailed ? "destructive" :
+                        "secondary"
+                      }
+                      className="shrink-0 ml-2"
+                    >
+                      {status}
+                    </Badge>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

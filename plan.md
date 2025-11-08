@@ -775,11 +775,40 @@ func TestCategorizer_AccuracyBenchmark(t *testing.T) {
 
 ---
 
-### **Day 5: Smart Review Inbox** (Friday)
+### **Day 5: Smart Review Inbox** ✅ COMPLETE
 
-**Goal:** User sees only uncategorized transactions, can tag them
+**Goal:** User sees only uncategorized transactions, can tag them, and view upload history
 
-#### Backend Tasks (3h)
+**Status:** All tasks completed successfully
+
+**Completed Features:**
+- ✅ Fixed critical pgtype.Numeric conversion bug (transactions now save correctly)
+- ✅ Created filtered transactions endpoint (GET /transactions?status=uncategorized)
+- ✅ Created update transaction endpoint (PUT /transactions/:id)
+- ✅ Created bulk update endpoint (PUT /transactions/bulk)
+- ✅ Created transaction stats endpoint (GET /transactions/stats)
+- ✅ Built review page with keyboard navigation (↑↓ arrows, Enter to select)
+- ✅ Implemented optimistic UI updates
+- ✅ Added upload history tracking in database
+- ✅ Added upload history endpoint (GET /upload/history)
+- ✅ Integrated upload history display on upload page with status badges and bank logos
+
+**Files Created/Modified:**
+- ✅ `cashlens-api/internal/handlers/transactions.go` (378 lines) - Transaction CRUD handlers
+- ✅ `cashlens-api/internal/handlers/upload.go` - Fixed amount conversion + added history tracking
+- ✅ `cashlens-api/internal/database/queries/users.sql` - GetUserByClerkID query
+- ✅ `cashlens-web/types/transaction.ts` (60 lines) - Transaction types & 15 categories
+- ✅ `cashlens-web/lib/transactions-api.ts` (123 lines) - Transaction API client
+- ✅ `cashlens-web/lib/upload-api.ts` - Added getUploadHistory function
+- ✅ `cashlens-web/app/(dashboard)/review/page.tsx` (342 lines) - Full review UI
+- ✅ `cashlens-web/app/(dashboard)/upload/page.tsx` - Added upload history section with bank logos
+
+**Critical Bugs Fixed:**
+- ✅ Fixed "null value in column amount" error - pgtype.Numeric now converts from float64 via string formatting
+- ✅ Fixed Clerk ID vs UUID pattern - all handlers now use GetUserByClerkID lookup
+- ✅ Upload history now properly tracked and displayed with status, accuracy, bank detection, and timestamp
+
+#### Backend Tasks (3h) ✅ COMPLETE
 
 1. **Create filtered endpoint** (`GET /transactions?status=uncategorized`):
 

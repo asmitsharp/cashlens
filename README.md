@@ -150,7 +150,7 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 4 - Rule Engine & Auto-Categorization ✅ COMPLETE
+### Current Phase: Day 5 - Smart Review Inbox ✅ COMPLETE
 
 - [x] **Day 0:** Project Setup ✅ COMPLETE
   - Backend & frontend structure
@@ -204,6 +204,17 @@ See `plan.md` for the complete 10-day MVP implementation plan.
   - 37/38 tests passing (99.7% pass rate)
   - Comprehensive documentation (CATEGORIZATION_SERVICE.md + API_DOCUMENTATION.md)
   - **Accuracy:** 85-91% across 5 Indian bank formats
+
+- [x] **Day 5:** Smart Review Inbox ✅ COMPLETE
+  - Transaction review API with 4 endpoints (filter, update, bulk update, stats)
+  - Review page with keyboard navigation (↑↓ arrows, Enter to select category)
+  - Optimistic UI updates (instant feedback)
+  - Upload history tracking in database
+  - Upload history display with bank logos and status badges
+  - Fixed critical pgtype.Numeric conversion bug
+  - Fixed Clerk ID vs UUID authentication pattern
+  - **Files:** transactions.go (378 lines), review/page.tsx (342 lines), upload history UI
+  - **Success metrics:** All uncategorized transactions can be reviewed and categorized
 
 **Key Implementation Details:**
 

@@ -119,16 +119,16 @@ func (h *UploadHandler) GetPresignedURL(c fiber.Ctx) error {
 		})
 	}
 
-	// 5. Get user_id from context (set by auth middleware)
-	userID, ok := c.Locals("user_id").(string)
-	if !ok || userID == "" {
+	// 5. Get clerk_user_id from context (set by auth middleware)
+	clerkUserID, ok := c.Locals("clerk_user_id").(string)
+	if !ok || clerkUserID == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized - user_id not found",
+			"error": "unauthorized - user not authenticated",
 		})
 	}
 
-	// 6. Generate upload key
-	key, err := h.storage.GenerateUploadKey(userID, filename)
+	// 6. Generate upload key (using clerk_user_id for S3 path)
+	key, err := h.storage.GenerateUploadKey(clerkUserID, filename)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "failed to generate upload key",
@@ -178,15 +178,26 @@ func (h *UploadHandler) ProcessUpload(c fiber.Ctx) error {
 	}
 
 	// 3. Authenticate and authorize
-	userID, ok := c.Locals("user_id").(string)
-	if !ok || userID == "" {
+	clerkUserID, ok := c.Locals("clerk_user_id").(string)
+	if !ok || clerkUserID == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized - user_id not found",
+			"error": "unauthorized - user not authenticated",
 		})
 	}
 
+	// 3.5. Look up user's UUID from clerk_user_id
+	user, err := h.db.GetUserByClerkID(c.Context(), clerkUserID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "user not found in database",
+		})
+	}
+
+	var userUUID uuid.UUID
+	copy(userUUID[:], user.ID.Bytes[:])
+
 	// 4. Security check: Verify file belongs to user
-	if !isFileOwnedByUser(req.FileKey, userID) {
+	if !isFileOwnedByUser(req.FileKey, clerkUserID) {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "forbidden - cannot access this file",
 		})
@@ -211,18 +222,40 @@ func (h *UploadHandler) ProcessUpload(c fiber.Ctx) error {
 		})
 	}
 
-	// 7. Categorize and save transactions if categorizer and db are available
+	// 7. Create upload history record
+	var pgUserID pgtype.UUID
+	pgUserID.Bytes = userUUID
+	pgUserID.Valid = true
+
+	// Detect bank type from filename
+	bankType := detectBankFromFilename(filename)
+
+	uploadHistory, err := h.db.CreateUploadHistory(c.Context(), db.CreateUploadHistoryParams{
+		UserID:   pgUserID,
+		Filename: filename,
+		FileKey:  req.FileKey,
+		BankType: pgtype.Text{String: bankType, Valid: bankType != "UNKNOWN"},
+		Status:   "processing",
+		TotalRows: pgtype.Int4{
+			Int32: int32(len(transactions)),
+			Valid: true,
+		},
+	})
+	if err != nil {
+		fmt.Printf("Failed to create upload history: %v\n", err)
+	}
+
+	var uploadID pgtype.UUID
+	if uploadHistory.ID.Valid {
+		uploadID.Bytes = uploadHistory.ID.Bytes
+		uploadID.Valid = true
+	}
+
+	// 8. Categorize and save transactions if categorizer and db are available
 	var categorizedCount int
 	var accuracyPercent float64
 
 	if h.categorizer != nil && h.db != nil {
-		// Parse user ID from string to UUID
-		userUUID, err := uuid.Parse(userID)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "invalid user ID format",
-			})
-		}
 
 		// Ensure categorizer has loaded global rules
 		if err := h.categorizer.LoadGlobalRules(c.Context()); err != nil {
@@ -246,14 +279,12 @@ func (h *UploadHandler) ProcessUpload(c fiber.Ctx) error {
 				categorizedCount++
 			}
 
-			// Convert uuid.UUID to pgtype.UUID
-			var pgUserID pgtype.UUID
-			pgUserID.Bytes = userUUID
-			pgUserID.Valid = true
-
 			// Convert float64 to pgtype.Numeric
 			var pgAmount pgtype.Numeric
-			pgAmount.Scan(txn.Amount)
+			if err := pgAmount.Scan(fmt.Sprintf("%.2f", txn.Amount)); err != nil {
+				fmt.Printf("Failed to convert amount to numeric: %v\n", err)
+				continue
+			}
 
 			// Determine transaction type
 			txnType := txn.TxnType
@@ -289,7 +320,39 @@ func (h *UploadHandler) ProcessUpload(c fiber.Ctx) error {
 		}
 	}
 
-	// 8. Build and return summary response
+	// 9. Update upload history with completion status
+	if uploadHistory.ID.Valid {
+		_, err = h.db.CompleteUploadProcessing(c.Context(), db.CompleteUploadProcessingParams{
+			ID:           uploadHistory.ID,
+			Status:       "completed",
+			ErrorMessage: pgtype.Text{Valid: false},
+			TotalRows: pgtype.Int4{
+				Int32: int32(len(transactions)),
+				Valid: true,
+			},
+			ParsedRows: pgtype.Int4{
+				Int32: int32(len(transactions)),
+				Valid: true,
+			},
+			CategorizedRows: pgtype.Int4{
+				Int32: int32(categorizedCount),
+				Valid: true,
+			},
+			DuplicateRows: pgtype.Int4{
+				Int32: 0,
+				Valid: true,
+			},
+			ErrorRows: pgtype.Int4{
+				Int32: 0,
+				Valid: true,
+			},
+		})
+		if err != nil {
+			fmt.Printf("Failed to update upload history: %v\n", err)
+		}
+	}
+
+	// 10. Build and return summary response
 	summary := buildProcessSummaryWithCategorization(req.FileKey, filename, transactions, categorizedCount, accuracyPercent)
 	return c.JSON(summary)
 }
@@ -318,12 +381,11 @@ func buildProcessSummaryWithCategorization(fileKey, filename string, transaction
 	uncategorizedCount := totalRows - categorizedCount
 
 	return fiber.Map{
-		"file_key":            fileKey,
-		"total_rows":          totalRows,
-		"categorized":         categorizedCount,
-		"uncategorized":       uncategorizedCount,
+		"upload_id":           fileKey, // Use file_key as upload_id for now
+		"total_transactions":  totalRows,
+		"categorized_count":   categorizedCount,
+		"uncategorized_count": uncategorizedCount,
 		"accuracy_percent":    accuracyPercent,
-		"transactions_parsed": totalRows,
 		"bank_detected":       bank,
 		"date_range":          dateRange,
 		"status":              "success",
@@ -374,4 +436,73 @@ func detectBankFromFilename(filename string) string {
 
 	// Default to UNKNOWN if no bank detected
 	return "UNKNOWN"
+}
+
+// GetUploadHistory returns the upload history for the authenticated user
+// GET /v1/upload/history?limit=10&offset=0
+func (h *UploadHandler) GetUploadHistory(c fiber.Ctx) error {
+	// 1. Get clerk_user_id from context
+	clerkUserID, ok := c.Locals("clerk_user_id").(string)
+	if !ok || clerkUserID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "unauthorized - user not authenticated",
+		})
+	}
+
+	// 2. Look up user's UUID from clerk_user_id
+	user, err := h.db.GetUserByClerkID(c.Context(), clerkUserID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "user not found in database",
+		})
+	}
+
+	var userUUID uuid.UUID
+	copy(userUUID[:], user.ID.Bytes[:])
+
+	// 3. Parse query parameters
+	limit := int32(10)
+	offset := int32(0)
+
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if parsedLimit, err := fmt.Sscanf(limitStr, "%d", &limit); err == nil && parsedLimit == 1 {
+			if limit < 1 {
+				limit = 10
+			}
+			if limit > 100 {
+				limit = 100
+			}
+		}
+	}
+
+	if offsetStr := c.Query("offset"); offsetStr != "" {
+		fmt.Sscanf(offsetStr, "%d", &offset)
+		if offset < 0 {
+			offset = 0
+		}
+	}
+
+	// 4. Convert to pgtype.UUID
+	var pgUserID pgtype.UUID
+	pgUserID.Bytes = userUUID
+	pgUserID.Valid = true
+
+	// 5. Get upload history from database
+	uploads, err := h.db.GetUserUploadHistory(c.Context(), db.GetUserUploadHistoryParams{
+		UserID: pgUserID,
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to fetch upload history",
+		})
+	}
+
+	// 6. Return upload history
+	return c.JSON(fiber.Map{
+		"uploads": uploads,
+		"limit":   limit,
+		"offset":  offset,
+	})
 }
