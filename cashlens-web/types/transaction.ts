@@ -10,6 +10,7 @@ export interface Transaction {
   category: string | null
   is_reviewed: boolean
   raw_data: string | null
+  bank_type: string | null
   created_at: string
   updated_at: string
 }

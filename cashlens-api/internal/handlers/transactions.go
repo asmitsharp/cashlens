@@ -77,7 +77,7 @@ func (h *TransactionHandler) GetTransactions(c fiber.Ctx) error {
 	pgUserID.Valid = true
 
 	// 4. Query transactions based on status filter
-	var transactions []db.Transaction
+	var transactions interface{}
 	var totalCount int64
 
 	switch status {

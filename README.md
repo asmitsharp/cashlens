@@ -150,7 +150,7 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 5 - Smart Review Inbox ✅ COMPLETE
+### Current Phase: Day 6 - Dashboard KPIs & Cash Flow Chart ✅ COMPLETE
 
 - [x] **Day 0:** Project Setup ✅ COMPLETE
   - Backend & frontend structure
@@ -216,7 +216,32 @@ See `plan.md` for the complete 10-day MVP implementation plan.
   - **Files:** transactions.go (378 lines), review/page.tsx (342 lines), upload history UI
   - **Success metrics:** All uncategorized transactions can be reviewed and categorized
 
+- [x] **Day 6:** Dashboard KPIs & Cash Flow Chart ✅ COMPLETE
+  - Summary API endpoint with date range filtering and dynamic grouping (day/week/month/year)
+  - SQL aggregation queries for KPIs (total inflow, outflow, net cash flow, transaction count)
+  - Dashboard with 3 KPI cards showing financial metrics
+  - Interactive multi-line chart (Recharts) with inflow, outflow, and net cash flow
+  - Clickable legend to toggle line visibility
+  - Enhanced tooltip showing all three metrics
+  - Recent transactions table on dashboard
+  - **BONUS:** Dedicated `/transactions` page with advanced filtering
+  - **BONUS:** Sort options (recent/oldest/highest/lowest), type filter (all/inflow/outflow), category filter
+  - **BONUS:** Pagination with "Load More" button (50 transactions per page)
+  - **BONUS:** Bank name column in transactions table (JOIN with upload_history)
+  - **BONUS:** Navigation sidebar updated with Transactions link
+  - **Files:** summary.go, NetCashFlowChart.tsx, TransactionsTable.tsx, transactions/page.tsx
+  - **Success metrics:** Dashboard displays real-time financial insights with interactive visualizations
+
 **Key Implementation Details:**
+
+**Dashboard & Analytics:**
+- Summary Handler: [internal/handlers/summary.go](cashlens-api/internal/handlers/summary.go) - KPIs and cash flow trends
+- Summary Queries: [internal/database/queries/summary.sql](cashlens-api/internal/database/queries/summary.sql) - SQL aggregations with DATE_TRUNC
+- Dashboard Page: [app/(dashboard)/dashboard/page.tsx](cashlens-web/app/(dashboard)/dashboard/page.tsx) - Main dashboard with KPIs
+- Cash Flow Chart: [components/charts/NetCashFlowChart.tsx](cashlens-web/components/charts/NetCashFlowChart.tsx) - Interactive Recharts visualization
+- Transactions Table: [components/transactions/TransactionsTable.tsx](cashlens-web/components/transactions/TransactionsTable.tsx) - Filterable table component
+- Transactions Page: [app/(dashboard)/transactions/page.tsx](cashlens-web/app/(dashboard)/transactions/page.tsx) - Dedicated view with pagination
+- Summary API: [lib/summary-api.ts](cashlens-web/lib/summary-api.ts) - Client-side API wrapper
 
 **Categorization Engine:**
 - Categorizer Service: [internal/services/categorizer.go](cashlens-api/internal/services/categorizer.go) - Multi-strategy matching engine

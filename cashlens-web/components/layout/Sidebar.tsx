@@ -12,6 +12,7 @@ import {
   Inbox,
   ChevronLeft,
   ChevronRight,
+  Receipt,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSidebar } from "./SidebarContext"
@@ -28,6 +29,11 @@ const navItems: NavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Transactions",
+    href: "/transactions",
+    icon: Receipt,
   },
   {
     title: "Upload",

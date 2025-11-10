@@ -60,6 +60,7 @@ func main() {
 	uploadHandler := handlers.NewUploadHandlerFull(storageService, parser, categorizer, queries)
 	transactionHandler := handlers.NewTransactionHandler(queries, categorizer)
 	rulesHandler := handlers.NewRulesHandler(queries, categorizer)
+	summaryHandler := handlers.NewSummaryHandler(queries)
 
 	app := fiber.New(fiber.Config{
 		AppName: "cashlens API v1.0",
@@ -123,6 +124,9 @@ func main() {
 	protected.Post("/rules", rulesHandler.CreateUserRule)
 	protected.Put("/rules/:id", rulesHandler.UpdateUserRule)
 	protected.Delete("/rules/:id", rulesHandler.DeleteUserRule)
+
+	// Summary routes (dashboard KPIs)
+	protected.Get("/summary", summaryHandler.GetSummary)
 
 	log.Println("✓ All routes configured successfully")
 	log.Println("")

@@ -176,10 +176,14 @@ func (q *Queries) GetAllTransactions(ctx context.Context, userID pgtype.UUID) ([
 }
 
 const getCategorizedTransactions = `-- name: GetCategorizedTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
-WHERE user_id = $1
-  AND category IS NOT NULL
-ORDER BY txn_date DESC
+SELECT
+    t.id, t.user_id, t.txn_date, t.description, t.amount, t.txn_type, t.category, t.is_reviewed, t.raw_data, t.created_at, t.updated_at, t.upload_id,
+    uh.bank_type
+FROM transactions t
+LEFT JOIN upload_history uh ON t.upload_id = uh.id
+WHERE t.user_id = $1
+  AND t.category IS NOT NULL
+ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -189,15 +193,31 @@ type GetCategorizedTransactionsParams struct {
 	Offset int32       `json:"offset"`
 }
 
-func (q *Queries) GetCategorizedTransactions(ctx context.Context, arg GetCategorizedTransactionsParams) ([]Transaction, error) {
+type GetCategorizedTransactionsRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	TxnDate     pgtype.Date        `json:"txn_date"`
+	Description string             `json:"description"`
+	Amount      pgtype.Numeric     `json:"amount"`
+	TxnType     string             `json:"txn_type"`
+	Category    pgtype.Text        `json:"category"`
+	IsReviewed  bool               `json:"is_reviewed"`
+	RawData     pgtype.Text        `json:"raw_data"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	UploadID    pgtype.UUID        `json:"upload_id"`
+	BankType    pgtype.Text        `json:"bank_type"`
+}
+
+func (q *Queries) GetCategorizedTransactions(ctx context.Context, arg GetCategorizedTransactionsParams) ([]GetCategorizedTransactionsRow, error) {
 	rows, err := q.db.Query(ctx, getCategorizedTransactions, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Transaction{}
+	items := []GetCategorizedTransactionsRow{}
 	for rows.Next() {
-		var i Transaction
+		var i GetCategorizedTransactionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -211,6 +231,7 @@ func (q *Queries) GetCategorizedTransactions(ctx context.Context, arg GetCategor
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.UploadID,
+			&i.BankType,
 		); err != nil {
 			return nil, err
 		}
@@ -381,10 +402,14 @@ func (q *Queries) GetTransactionsByDateRange(ctx context.Context, arg GetTransac
 }
 
 const getUncategorizedTransactions = `-- name: GetUncategorizedTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
-WHERE user_id = $1
-  AND category IS NULL
-ORDER BY txn_date DESC
+SELECT
+    t.id, t.user_id, t.txn_date, t.description, t.amount, t.txn_type, t.category, t.is_reviewed, t.raw_data, t.created_at, t.updated_at, t.upload_id,
+    uh.bank_type
+FROM transactions t
+LEFT JOIN upload_history uh ON t.upload_id = uh.id
+WHERE t.user_id = $1
+  AND t.category IS NULL
+ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -394,15 +419,31 @@ type GetUncategorizedTransactionsParams struct {
 	Offset int32       `json:"offset"`
 }
 
-func (q *Queries) GetUncategorizedTransactions(ctx context.Context, arg GetUncategorizedTransactionsParams) ([]Transaction, error) {
+type GetUncategorizedTransactionsRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	TxnDate     pgtype.Date        `json:"txn_date"`
+	Description string             `json:"description"`
+	Amount      pgtype.Numeric     `json:"amount"`
+	TxnType     string             `json:"txn_type"`
+	Category    pgtype.Text        `json:"category"`
+	IsReviewed  bool               `json:"is_reviewed"`
+	RawData     pgtype.Text        `json:"raw_data"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	UploadID    pgtype.UUID        `json:"upload_id"`
+	BankType    pgtype.Text        `json:"bank_type"`
+}
+
+func (q *Queries) GetUncategorizedTransactions(ctx context.Context, arg GetUncategorizedTransactionsParams) ([]GetUncategorizedTransactionsRow, error) {
 	rows, err := q.db.Query(ctx, getUncategorizedTransactions, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Transaction{}
+	items := []GetUncategorizedTransactionsRow{}
 	for rows.Next() {
-		var i Transaction
+		var i GetUncategorizedTransactionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -416,6 +457,7 @@ func (q *Queries) GetUncategorizedTransactions(ctx context.Context, arg GetUncat
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.UploadID,
+			&i.BankType,
 		); err != nil {
 			return nil, err
 		}
@@ -428,9 +470,13 @@ func (q *Queries) GetUncategorizedTransactions(ctx context.Context, arg GetUncat
 }
 
 const getUserTransactions = `-- name: GetUserTransactions :many
-SELECT id, user_id, txn_date, description, amount, txn_type, category, is_reviewed, raw_data, created_at, updated_at, upload_id FROM transactions
-WHERE user_id = $1
-ORDER BY txn_date DESC
+SELECT
+    t.id, t.user_id, t.txn_date, t.description, t.amount, t.txn_type, t.category, t.is_reviewed, t.raw_data, t.created_at, t.updated_at, t.upload_id,
+    uh.bank_type
+FROM transactions t
+LEFT JOIN upload_history uh ON t.upload_id = uh.id
+WHERE t.user_id = $1
+ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -440,15 +486,31 @@ type GetUserTransactionsParams struct {
 	Offset int32       `json:"offset"`
 }
 
-func (q *Queries) GetUserTransactions(ctx context.Context, arg GetUserTransactionsParams) ([]Transaction, error) {
+type GetUserTransactionsRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	TxnDate     pgtype.Date        `json:"txn_date"`
+	Description string             `json:"description"`
+	Amount      pgtype.Numeric     `json:"amount"`
+	TxnType     string             `json:"txn_type"`
+	Category    pgtype.Text        `json:"category"`
+	IsReviewed  bool               `json:"is_reviewed"`
+	RawData     pgtype.Text        `json:"raw_data"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	UploadID    pgtype.UUID        `json:"upload_id"`
+	BankType    pgtype.Text        `json:"bank_type"`
+}
+
+func (q *Queries) GetUserTransactions(ctx context.Context, arg GetUserTransactionsParams) ([]GetUserTransactionsRow, error) {
 	rows, err := q.db.Query(ctx, getUserTransactions, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Transaction{}
+	items := []GetUserTransactionsRow{}
 	for rows.Next() {
-		var i Transaction
+		var i GetUserTransactionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
@@ -462,6 +524,7 @@ func (q *Queries) GetUserTransactions(ctx context.Context, arg GetUserTransactio
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.UploadID,
+			&i.BankType,
 		); err != nil {
 			return nil, err
 		}

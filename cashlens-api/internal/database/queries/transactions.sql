@@ -33,9 +33,13 @@ WHERE id = $1
 LIMIT 1;
 
 -- name: GetUserTransactions :many
-SELECT * FROM transactions
-WHERE user_id = $1
-ORDER BY txn_date DESC
+SELECT
+    t.*,
+    uh.bank_type
+FROM transactions t
+LEFT JOIN upload_history uh ON t.upload_id = uh.id
+WHERE t.user_id = $1
+ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3;
 
 -- name: GetAllTransactions :many
@@ -44,17 +48,25 @@ WHERE user_id = $1
 ORDER BY txn_date DESC;
 
 -- name: GetCategorizedTransactions :many
-SELECT * FROM transactions
-WHERE user_id = $1
-  AND category IS NOT NULL
-ORDER BY txn_date DESC
+SELECT
+    t.*,
+    uh.bank_type
+FROM transactions t
+LEFT JOIN upload_history uh ON t.upload_id = uh.id
+WHERE t.user_id = $1
+  AND t.category IS NOT NULL
+ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3;
 
 -- name: GetUncategorizedTransactions :many
-SELECT * FROM transactions
-WHERE user_id = $1
-  AND category IS NULL
-ORDER BY txn_date DESC
+SELECT
+    t.*,
+    uh.bank_type
+FROM transactions t
+LEFT JOIN upload_history uh ON t.upload_id = uh.id
+WHERE t.user_id = $1
+  AND t.category IS NULL
+ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3;
 
 -- name: GetTransactionsByDateRange :many
