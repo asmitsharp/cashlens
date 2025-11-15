@@ -67,7 +67,9 @@ func main() {
 	})
 
 	// Apply global middleware
-	app.Use(middleware.CORS())
+	app.Use(middleware.SecurityHeaders()) // Security headers (OWASP best practices)
+	app.Use(middleware.CORS())            // CORS configuration
+	app.Use(middleware.RateLimiter())     // Rate limiting (100 req/min per user/IP)
 
 	// Health check endpoint (public)
 	app.Get("/health", func(c fiber.Ctx) error {

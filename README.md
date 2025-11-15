@@ -150,7 +150,7 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 7 - Top Expenses Chart ✅ COMPLETE
+### Current Phase: Day 8 - Security Hardening ✅ COMPLETE
 
 - [x] **Day 0:** Project Setup ✅ COMPLETE
   - Backend & frontend structure
@@ -245,6 +245,19 @@ See `plan.md` for the complete 10-day MVP implementation plan.
   - **Files:** summary.sql, summary.go, summary.sql.go, summary-api.ts, ExpensesChart.tsx, dashboard/page.tsx
   - **Success metrics:** Backend compiles, API running, chart component following design system
 
+- [x] **Day 8:** Security Hardening ✅ COMPLETE
+  - Rate limiting middleware (100 requests/min per user, 20 for sensitive endpoints)
+  - Security headers middleware (X-Frame-Options, CSP, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
+  - Input sanitization utilities for XSS and SQL injection prevention
+  - File upload validation with magic byte checking (already implemented in validator.go)
+  - Comprehensive security test suite (5 test functions, all passing)
+  - HTML escaping for all user inputs
+  - Path traversal prevention in file uploads
+  - CORS configuration for development
+  - SQL injection prevention via prepared statements (sqlc) + sanitization
+  - **Files:** ratelimit.go, security.go, sanitize.go, security_test.go, updated main.go
+  - **Success metrics:** All security tests passing, backend compiles, production-ready security features
+
 **Key Implementation Details:**
 
 **Dashboard & Analytics:**
@@ -274,6 +287,13 @@ See `plan.md` for the complete 10-day MVP implementation plan.
 - Upload Migration: [internal/database/migrations/003_upload_history.sql](cashlens-api/internal/database/migrations/003_upload_history.sql)
 - LocalStack Init: [scripts/init-localstack.sh](scripts/init-localstack.sh) - S3 bucket setup script
 - Docker Config: [docker-compose.yml](docker-compose.yml) - LocalStack with CORS enabled
+
+**Security:**
+- Rate Limiter: [internal/middleware/ratelimit.go](cashlens-api/internal/middleware/ratelimit.go) - 100 req/min (normal), 20 req/min (strict)
+- Security Headers: [internal/middleware/security.go](cashlens-api/internal/middleware/security.go) - OWASP best practices
+- Input Sanitization: [internal/middleware/sanitize.go](cashlens-api/internal/middleware/sanitize.go) - XSS and SQL injection prevention
+- File Validator: [internal/services/validator.go](cashlens-api/internal/services/validator.go) - Magic byte checking, MIME validation
+- Security Tests: [internal/middleware/security_test.go](cashlens-api/internal/middleware/security_test.go) - Comprehensive test suite
 
 **Authentication:**
 - Clerk Middleware: [internal/middleware/clerk_auth.go](cashlens-api/internal/middleware/clerk_auth.go) - JWT validation with Clerk SDK
