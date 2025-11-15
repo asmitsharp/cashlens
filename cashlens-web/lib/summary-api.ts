@@ -14,9 +14,17 @@ export interface NetFlowTrendPoint {
   net_flow: number
 }
 
+export interface TopExpenseItem {
+  category: string
+  total_amount: number
+  txn_count: number
+  percentage: number
+}
+
 export interface SummaryResponse {
   kpis: KPIsResponse
   net_flow_trend: NetFlowTrendPoint[]
+  top_expenses: TopExpenseItem[]
   from_date: string
   to_date: string
   group_by: string

@@ -34,12 +34,20 @@ type NetFlowTrendPoint struct {
 	NetFlow float64 `json:"net_flow"`
 }
 
+type TopExpenseItem struct {
+	Category    string  `json:"category"`
+	TotalAmount float64 `json:"total_amount"`
+	TxnCount    int64   `json:"txn_count"`
+	Percentage  float64 `json:"percentage"`
+}
+
 type SummaryResponse struct {
-	KPIs          KPIsResponse        `json:"kpis"`
-	NetFlowTrend  []NetFlowTrendPoint `json:"net_flow_trend"`
-	FromDate      string              `json:"from_date"`
-	ToDate        string              `json:"to_date"`
-	GroupBy       string              `json:"group_by"`
+	KPIs         KPIsResponse        `json:"kpis"`
+	NetFlowTrend []NetFlowTrendPoint `json:"net_flow_trend"`
+	TopExpenses  []TopExpenseItem    `json:"top_expenses"`
+	FromDate     string              `json:"from_date"`
+	ToDate       string              `json:"to_date"`
+	GroupBy      string              `json:"group_by"`
 }
 
 // GetSummary handles GET /v1/summary
@@ -155,9 +163,38 @@ func (h *SummaryHandler) GetSummary(c fiber.Ctx) error {
 		})
 	}
 
+	// Get top expenses
+	expensesRows, err := h.queries.GetTopExpenses(c.Context(), db.GetTopExpensesParams{
+		UserID:    user.ID,
+		TxnDate:   fromPgDate,
+		TxnDate_2: toPgDate,
+	})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Failed to fetch top expenses: %s", err.Error()),
+		})
+	}
+
+	// Convert top expenses to response format
+	topExpenses := make([]TopExpenseItem, 0, len(expensesRows))
+	for _, row := range expensesRows {
+		category := ""
+		if row.Category.Valid {
+			category = row.Category.String
+		}
+
+		topExpenses = append(topExpenses, TopExpenseItem{
+			Category:    category,
+			TotalAmount: float64(row.TotalAmount),
+			TxnCount:    row.TxnCount,
+			Percentage:  convertToFloat64(row.Percentage),
+		})
+	}
+
 	response := SummaryResponse{
 		KPIs:         kpis,
 		NetFlowTrend: trend,
+		TopExpenses:  topExpenses,
 		FromDate:     fromDate.Format("2006-01-02"),
 		ToDate:       toDate.Format("2006-01-02"),
 		GroupBy:      groupBy,

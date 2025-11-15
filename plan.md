@@ -1150,11 +1150,13 @@ export default function NetCashFlowChart({ data }) {
 
 ---
 
-### **Day 7: Top Expenses Chart** (Tuesday)
+### **Day 7: Top Expenses Chart** ✅ COMPLETE
 
 **Goal:** Add horizontal bar chart showing top expense categories
 
-#### Backend Tasks (2h)
+**Status:** All tasks completed successfully
+
+#### Backend Tasks (2h) ✅ COMPLETE
 
 1. **Create top expenses query** (`queries/summary.sql`):
 
@@ -1222,7 +1224,42 @@ export default function ExpensesChart({ data }) {
 
 2. **Add to dashboard page** (below net flow chart)
 
-**Deliverable:** Complete dashboard with both charts
+#### Completion Summary
+
+**Core Features Implemented:**
+- ✅ SQL query with top 10 expense aggregation and percentage calculation
+- ✅ Integration with /v1/summary endpoint
+- ✅ ExpensesChart.tsx component with horizontal bar chart
+- ✅ Gradient color scheme (red to amber) from design system
+- ✅ Custom tooltip with amount, transaction count, and percentage
+- ✅ Legend showing top 6 categories with color indicators
+- ✅ Responsive grid layout (side-by-side with cash flow chart on desktop)
+- ✅ Indian Rupee formatting with proper thousand separators
+- ✅ Empty state handling
+
+**Files Created/Modified:**
+- `cashlens-api/internal/database/queries/summary.sql` - Added GetTopExpenses query
+- `cashlens-api/internal/handlers/summary.go` - Added TopExpenseItem type and integration
+- `cashlens-api/internal/database/db/summary.sql.go` - Regenerated sqlc code
+- `cashlens-web/lib/summary-api.ts` - Added TopExpenseItem interface
+- `cashlens-web/components/charts/ExpensesChart.tsx` - NEW (123 lines)
+- `cashlens-web/app/(dashboard)/dashboard/page.tsx` - Added ExpensesChart to grid layout
+
+**Key Technical Details:**
+- Uses SQL subquery with NULLIF for safe percentage calculation
+- Filters only debit transactions with non-null categories
+- Returns top 10 categories ordered by total amount
+- 10-color gradient from destructive red to warning amber
+- Fully compliant with design-system.md (rounded-2xl, proper spacing)
+- Type-safe from database to frontend (pgtype.Numeric → float64 → number)
+
+**Testing:**
+- ✅ Backend compiles successfully
+- ✅ sqlc code generation successful
+- ✅ API health check passing
+- ✅ All 5 files created/modified as planned
+
+**Deliverable:** ✅ Complete dashboard with both charts (Net Cash Flow + Top Expenses) in responsive grid layout
 
 ---
 

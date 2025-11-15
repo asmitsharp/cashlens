@@ -6,6 +6,7 @@ import { getSummary, SummaryResponse } from "@/lib/summary-api"
 import { getTransactions } from "@/lib/transactions-api"
 import { Transaction } from "@/types/transaction"
 import NetCashFlowChart from "@/components/charts/NetCashFlowChart"
+import ExpensesChart from "@/components/charts/ExpensesChart"
 import TransactionsTable from "@/components/transactions/TransactionsTable"
 import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine } from "lucide-react"
 
@@ -163,8 +164,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Net Flow Chart */}
-      <NetCashFlowChart data={summary.net_flow_trend} />
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Net Flow Chart */}
+        <NetCashFlowChart data={summary.net_flow_trend} />
+
+        {/* Top Expenses Chart */}
+        <ExpensesChart data={summary.top_expenses} />
+      </div>
 
       {/* Recent Transactions */}
       <TransactionsTable transactions={transactions} limit={10} />

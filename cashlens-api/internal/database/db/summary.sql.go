@@ -151,3 +151,65 @@ func (q *Queries) GetNetFlowTrend(ctx context.Context, arg GetNetFlowTrendParams
 	}
 	return items, nil
 }
+
+const getTopExpenses = `-- name: GetTopExpenses :many
+SELECT
+    t.category,
+    SUM(t.amount) AS total_amount,
+    COUNT(*) AS txn_count,
+    ROUND(
+        (SUM(t.amount) / NULLIF(
+            (SELECT SUM(t2.amount) FROM transactions t2
+             WHERE t2.user_id = $1 AND t2.txn_type = 'debit' AND t2.txn_date BETWEEN $2 AND $3),
+            0
+        )) * 100,
+        2
+    ) AS percentage
+FROM transactions t
+WHERE t.user_id = $1
+  AND t.txn_type = 'debit'
+  AND t.category IS NOT NULL
+  AND t.category != ''
+  AND t.txn_date BETWEEN $2 AND $3
+GROUP BY t.category
+ORDER BY total_amount DESC
+LIMIT 10
+`
+
+type GetTopExpensesParams struct {
+	UserID    pgtype.UUID `json:"user_id"`
+	TxnDate   pgtype.Date `json:"txn_date"`
+	TxnDate_2 pgtype.Date `json:"txn_date_2"`
+}
+
+type GetTopExpensesRow struct {
+	Category    pgtype.Text    `json:"category"`
+	TotalAmount int64          `json:"total_amount"`
+	TxnCount    int64          `json:"txn_count"`
+	Percentage  pgtype.Numeric `json:"percentage"`
+}
+
+func (q *Queries) GetTopExpenses(ctx context.Context, arg GetTopExpensesParams) ([]GetTopExpensesRow, error) {
+	rows, err := q.db.Query(ctx, getTopExpenses, arg.UserID, arg.TxnDate, arg.TxnDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetTopExpensesRow{}
+	for rows.Next() {
+		var i GetTopExpensesRow
+		if err := rows.Scan(
+			&i.Category,
+			&i.TotalAmount,
+			&i.TxnCount,
+			&i.Percentage,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

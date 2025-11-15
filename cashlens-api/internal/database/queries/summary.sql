@@ -29,3 +29,26 @@ WHERE user_id = $1
   AND txn_date BETWEEN $2 AND $3
 GROUP BY DATE_TRUNC(sqlc.arg(date_trunc)::text, txn_date::timestamp)
 ORDER BY period;
+
+-- name: GetTopExpenses :many
+SELECT
+    t.category,
+    SUM(t.amount) AS total_amount,
+    COUNT(*) AS txn_count,
+    ROUND(
+        (SUM(t.amount) / NULLIF(
+            (SELECT SUM(t2.amount) FROM transactions t2
+             WHERE t2.user_id = $1 AND t2.txn_type = 'debit' AND t2.txn_date BETWEEN $2 AND $3),
+            0
+        )) * 100,
+        2
+    ) AS percentage
+FROM transactions t
+WHERE t.user_id = $1
+  AND t.txn_type = 'debit'
+  AND t.category IS NOT NULL
+  AND t.category != ''
+  AND t.txn_date BETWEEN $2 AND $3
+GROUP BY t.category
+ORDER BY total_amount DESC
+LIMIT 10;

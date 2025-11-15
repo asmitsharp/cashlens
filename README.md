@@ -150,7 +150,7 @@ npm run test:e2e  # Playwright tests
 
 See `plan.md` for the complete 10-day MVP implementation plan.
 
-### Current Phase: Day 6 - Dashboard KPIs & Cash Flow Chart ✅ COMPLETE
+### Current Phase: Day 7 - Top Expenses Chart ✅ COMPLETE
 
 - [x] **Day 0:** Project Setup ✅ COMPLETE
   - Backend & frontend structure
@@ -232,13 +232,27 @@ See `plan.md` for the complete 10-day MVP implementation plan.
   - **Files:** summary.go, NetCashFlowChart.tsx, TransactionsTable.tsx, transactions/page.tsx
   - **Success metrics:** Dashboard displays real-time financial insights with interactive visualizations
 
+- [x] **Day 7:** Top Expenses Chart ✅ COMPLETE
+  - SQL query for top 10 expense categories with aggregation (SUM, COUNT, percentage)
+  - Integration with `/v1/summary` endpoint returning top_expenses array
+  - ExpensesChart.tsx component with horizontal bar chart (Recharts)
+  - 10-color gradient scheme from destructive red to warning amber
+  - Custom tooltip showing amount (₹ with Indian formatting), transaction count, and percentage
+  - Legend displaying top 6 categories with color indicators
+  - Responsive grid layout (side-by-side with Net Cash Flow chart on desktop, stacked on mobile)
+  - Empty state handling when no expense data exists
+  - Full type safety from database (pgtype.Numeric) to frontend (TypeScript)
+  - **Files:** summary.sql, summary.go, summary.sql.go, summary-api.ts, ExpensesChart.tsx, dashboard/page.tsx
+  - **Success metrics:** Backend compiles, API running, chart component following design system
+
 **Key Implementation Details:**
 
 **Dashboard & Analytics:**
-- Summary Handler: [internal/handlers/summary.go](cashlens-api/internal/handlers/summary.go) - KPIs and cash flow trends
-- Summary Queries: [internal/database/queries/summary.sql](cashlens-api/internal/database/queries/summary.sql) - SQL aggregations with DATE_TRUNC
-- Dashboard Page: [app/(dashboard)/dashboard/page.tsx](cashlens-web/app/(dashboard)/dashboard/page.tsx) - Main dashboard with KPIs
-- Cash Flow Chart: [components/charts/NetCashFlowChart.tsx](cashlens-web/components/charts/NetCashFlowChart.tsx) - Interactive Recharts visualization
+- Summary Handler: [internal/handlers/summary.go](cashlens-api/internal/handlers/summary.go) - KPIs, cash flow trends, and top expenses
+- Summary Queries: [internal/database/queries/summary.sql](cashlens-api/internal/database/queries/summary.sql) - SQL aggregations with DATE_TRUNC and expense analysis
+- Dashboard Page: [app/(dashboard)/dashboard/page.tsx](cashlens-web/app/(dashboard)/dashboard/page.tsx) - Main dashboard with KPIs and charts
+- Cash Flow Chart: [components/charts/NetCashFlowChart.tsx](cashlens-web/components/charts/NetCashFlowChart.tsx) - Interactive multi-line Recharts visualization
+- Expenses Chart: [components/charts/ExpensesChart.tsx](cashlens-web/components/charts/ExpensesChart.tsx) - Horizontal bar chart with top 10 expense categories
 - Transactions Table: [components/transactions/TransactionsTable.tsx](cashlens-web/components/transactions/TransactionsTable.tsx) - Filterable table component
 - Transactions Page: [app/(dashboard)/transactions/page.tsx](cashlens-web/app/(dashboard)/transactions/page.tsx) - Dedicated view with pagination
 - Summary API: [lib/summary-api.ts](cashlens-web/lib/summary-api.ts) - Client-side API wrapper
