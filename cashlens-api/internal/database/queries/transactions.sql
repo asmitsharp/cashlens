@@ -39,6 +39,11 @@ SELECT
 FROM transactions t
 LEFT JOIN upload_history uh ON t.upload_id = uh.id
 WHERE t.user_id = $1
+  AND (
+      sqlc.narg('search')::text IS NULL 
+      OR t.description ILIKE '%' || sqlc.narg('search') || '%' 
+      OR t.category ILIKE '%' || sqlc.narg('search') || '%'
+  )
 ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3;
 

@@ -19,12 +19,14 @@ export async function getTransactions(
     status?: "all" | "categorized" | "uncategorized"
     limit?: number
     offset?: number
+    search?: string
   }
 ): Promise<TransactionListResponse> {
   const queryParams = new URLSearchParams()
   if (params?.status) queryParams.append("status", params.status)
   if (params?.limit) queryParams.append("limit", params.limit.toString())
   if (params?.offset) queryParams.append("offset", params.offset.toString())
+  if (params?.search) queryParams.append("search", params.search)
 
   const url = `${API_URL}/transactions?${queryParams.toString()}`
 

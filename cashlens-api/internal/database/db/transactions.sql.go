@@ -476,6 +476,11 @@ SELECT
 FROM transactions t
 LEFT JOIN upload_history uh ON t.upload_id = uh.id
 WHERE t.user_id = $1
+  AND (
+      $4::text IS NULL 
+      OR t.description ILIKE '%' || $4 || '%' 
+      OR t.category ILIKE '%' || $4 || '%'
+  )
 ORDER BY t.txn_date DESC
 LIMIT $2 OFFSET $3
 `
@@ -484,6 +489,7 @@ type GetUserTransactionsParams struct {
 	UserID pgtype.UUID `json:"user_id"`
 	Limit  int32       `json:"limit"`
 	Offset int32       `json:"offset"`
+	Search pgtype.Text `json:"search"`
 }
 
 type GetUserTransactionsRow struct {
@@ -503,7 +509,12 @@ type GetUserTransactionsRow struct {
 }
 
 func (q *Queries) GetUserTransactions(ctx context.Context, arg GetUserTransactionsParams) ([]GetUserTransactionsRow, error) {
-	rows, err := q.db.Query(ctx, getUserTransactions, arg.UserID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, getUserTransactions,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+	)
 	if err != nil {
 		return nil, err
 	}

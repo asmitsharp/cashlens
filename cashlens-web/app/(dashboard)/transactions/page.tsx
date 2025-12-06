@@ -2,12 +2,16 @@
 
 import { useAuth } from "@clerk/nextjs"
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { getTransactions } from "@/lib/transactions-api"
 import { Transaction } from "@/types/transaction"
 import TransactionsTable from "@/components/transactions/TransactionsTable"
 
 export default function TransactionsPage() {
   const { getToken } = useAuth()
+  const searchParams = useSearchParams()
+  const search = searchParams.get("search") || ""
+  
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -16,10 +20,11 @@ export default function TransactionsPage() {
   const ITEMS_PER_PAGE = 50
 
   useEffect(() => {
-    loadTransactions()
-  }, [])
+    setPage(1) // Reset page on search change
+    loadTransactions(1)
+  }, [search])
 
-  const loadTransactions = async () => {
+  const loadTransactions = async (pageNum: number) => {
     try {
       setLoading(true)
       setError(null)
@@ -30,12 +35,13 @@ export default function TransactionsPage() {
       }
 
       const data = await getTransactions(token, {
-        limit: ITEMS_PER_PAGE * page,
+        limit: ITEMS_PER_PAGE * pageNum,
         status: "all",
+        search: search,
       })
 
       setTransactions(data.transactions || [])
-      setHasMore(data.transactions.length >= ITEMS_PER_PAGE * page)
+      setHasMore(data.transactions.length >= ITEMS_PER_PAGE * pageNum)
     } catch (err) {
       console.error("Failed to load transactions:", err)
       setError(err instanceof Error ? err.message : "Failed to load transactions")
@@ -53,6 +59,7 @@ export default function TransactionsPage() {
       const data = await getTransactions(token, {
         limit: ITEMS_PER_PAGE * nextPage,
         status: "all",
+        search: search,
       })
 
       setTransactions(data.transactions || [])
@@ -88,7 +95,7 @@ export default function TransactionsPage() {
       <div>
         <h1 className="text-3xl font-bold">All Transactions</h1>
         <p className="mt-2 text-muted-foreground">
-          View and filter all your bank transactions
+          {search ? `Showing results for "${search}"` : "View and filter all your bank transactions"}
         </p>
       </div>
 

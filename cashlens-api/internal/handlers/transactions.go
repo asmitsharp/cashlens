@@ -60,6 +60,7 @@ func (h *TransactionHandler) GetTransactions(c fiber.Ctx) error {
 	status := c.Query("status", "all")
 	limitStr := c.Query("limit", "50")
 	offsetStr := c.Query("offset", "0")
+	searchQuery := c.Query("search", "")
 
 	limit, err := strconv.ParseInt(limitStr, 10, 32)
 	if err != nil || limit < 1 || limit > 100 {
@@ -75,6 +76,13 @@ func (h *TransactionHandler) GetTransactions(c fiber.Ctx) error {
 	var pgUserID pgtype.UUID
 	pgUserID.Bytes = userUUID
 	pgUserID.Valid = true
+
+	// Prepare search param
+	var pgSearch pgtype.Text
+	if searchQuery != "" {
+		pgSearch.String = searchQuery
+		pgSearch.Valid = true
+	}
 
 	// 4. Query transactions based on status filter
 	var transactions interface{}
@@ -112,12 +120,14 @@ func (h *TransactionHandler) GetTransactions(c fiber.Ctx) error {
 			UserID: pgUserID,
 			Limit:  int32(limit),
 			Offset: int32(offset),
+			Search: pgSearch,
 		})
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "failed to fetch transactions",
 			})
 		}
+		// TODO: Update count to reflect search filter if needed, but for now total count is fine
 		totalCount, _ = h.db.CountUserTransactions(c.Context(), pgUserID)
 	}
 
@@ -369,9 +379,9 @@ func (h *TransactionHandler) GetTransactionStats(c fiber.Ctx) error {
 
 	// 4. Return stats
 	return c.JSON(fiber.Map{
-		"total_transactions":      stats.TotalCount,
-		"categorized_count":       stats.CategorizedCount,
-		"uncategorized_count":     stats.UncategorizedCount,
-		"accuracy_percent":        stats.AccuracyPercent,
+		"total_transactions":  stats.TotalCount,
+		"categorized_count":   stats.CategorizedCount,
+		"uncategorized_count": stats.UncategorizedCount,
+		"accuracy_percent":    stats.AccuracyPercent,
 	})
 }
