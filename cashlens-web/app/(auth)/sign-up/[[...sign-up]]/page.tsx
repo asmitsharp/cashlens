@@ -11,6 +11,7 @@ export default function SignUpPage() {
           </p>
         </div>
         <SignUp
+          forceRedirectUrl="/dashboard"
           appearance={{
             elements: {
               rootBox: "mx-auto",
