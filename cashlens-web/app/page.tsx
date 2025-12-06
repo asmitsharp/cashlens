@@ -1,9 +1,14 @@
 "use client"
 
-import Link from "next/link"
 import { useUser } from "@clerk/nextjs"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { Navbar } from "@/components/landing/Navbar"
+import { Hero } from "@/components/landing/Hero"
+import { Features } from "@/components/landing/Features"
+import { Testimonials } from "@/components/landing/Testimonials"
+import { Pricing } from "@/components/landing/Pricing"
+import { Footer } from "@/components/landing/Footer"
 
 export default function HomePage() {
   const { isSignedIn, isLoaded } = useUser()
@@ -17,8 +22,8 @@ export default function HomePage() {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
@@ -28,30 +33,15 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-24">
-      <main className="flex flex-col items-center gap-8">
-        <h1 className="text-4xl font-bold">Welcome to Cashlens</h1>
-        <p className="text-xl text-gray-600">
-          Financial Analytics SaaS for Indian SMBs
-        </p>
-        <div className="flex gap-4">
-          <Link
-            href="/sign-in"
-            className="rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/sign-up"
-            className="rounded-lg border border-gray-300 px-6 py-3 hover:bg-gray-50"
-          >
-            Sign Up
-          </Link>
-        </div>
-        <div className="mt-8 text-sm text-gray-500">
-          <p>Backend API: <a href="http://localhost:8080/health" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">http://localhost:8080/health</a></p>
-        </div>
+    <div className="min-h-screen bg-white selection:bg-primary/10 selection:text-primary">
+      <Navbar />
+      <main>
+        <Hero />
+        <Features />
+        <Testimonials />
+        <Pricing />
       </main>
+      <Footer />
     </div>
   )
 }

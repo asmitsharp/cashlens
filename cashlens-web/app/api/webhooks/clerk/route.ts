@@ -47,14 +47,17 @@ export async function POST(req: Request) {
 
   // Handle the webhook event
   const eventType = evt.type
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/v1"
 
   if (eventType === "user.created") {
     const { id, email_addresses, first_name, last_name } = evt.data
 
     try {
+      console.log(`Syncing new user to backend: ${API_URL}/internal/users`)
+      
       // Call your backend API to create user in database
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/internal/users`,
+        `${API_URL}/internal/users`,
         {
           method: "POST",
           headers: {
@@ -69,7 +72,10 @@ export async function POST(req: Request) {
       )
 
       if (!response.ok) {
-        console.error("Failed to create user in database:", await response.text())
+        const errorText = await response.text()
+        console.error(`Failed to create user in database (${response.status}):`, errorText)
+      } else {
+        console.log("Successfully synced user to backend")
       }
     } catch (error) {
       console.error("Error creating user:", error)
@@ -80,9 +86,11 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name } = evt.data
 
     try {
+      console.log(`Syncing user update to backend: ${API_URL}/internal/users/${id}`)
+
       // Call your backend API to update user in database
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/internal/users/${id}`,
+      const response = await fetch(
+        `${API_URL}/internal/users/${id}`,
         {
           method: "PUT",
           headers: {
@@ -94,6 +102,13 @@ export async function POST(req: Request) {
           }),
         }
       )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Failed to update user in database (${response.status}):`, errorText)
+      } else {
+        console.log("Successfully synced user update to backend")
+      }
     } catch (error) {
       console.error("Error updating user:", error)
     }
