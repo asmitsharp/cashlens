@@ -3,14 +3,15 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
-	"github.com/gofiber/fiber/v3"
-	"github.com/joho/godotenv"
 	"github.com/ashmitsharp/cashlens-api/internal/database"
 	"github.com/ashmitsharp/cashlens-api/internal/database/db"
 	"github.com/ashmitsharp/cashlens-api/internal/handlers"
 	"github.com/ashmitsharp/cashlens-api/internal/middleware"
 	"github.com/ashmitsharp/cashlens-api/internal/services"
+	"github.com/gofiber/fiber/v3"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -34,9 +35,9 @@ func main() {
 	// Initialize services
 	// Storage service for S3 operations
 	storageService, err := services.NewStorageService(
-		os.Getenv("S3_BUCKET"),      // e.g., "cashlens-uploads"
-		os.Getenv("S3_REGION"),      // e.g., "ap-south-1"
-		os.Getenv("AWS_ENDPOINT"),   // e.g., "http://localhost:4566" for LocalStack
+		os.Getenv("S3_BUCKET"),    // e.g., "cashlens-uploads"
+		os.Getenv("S3_REGION"),    // e.g., "ap-south-1"
+		os.Getenv("AWS_ENDPOINT"), // e.g., "http://localhost:4566" for LocalStack
 	)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage service: %v", err)
@@ -63,7 +64,11 @@ func main() {
 	summaryHandler := handlers.NewSummaryHandler(queries)
 
 	app := fiber.New(fiber.Config{
-		AppName: "cashlens API v1.0",
+		AppName:      "cashlens API v1.0",
+		BodyLimit:    10 * 1024 * 1024, // 10MB max body size
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  30 * time.Second,
 	})
 
 	// Apply global middleware
